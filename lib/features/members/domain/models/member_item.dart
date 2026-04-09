@@ -8,6 +8,7 @@ class MemberItem {
   final String grade; // 'A' | 'B' | 'C' | 'D' | '초심'
   final String phone;
   final String address;
+  final String joinDate; // ★ 가입월 (예: '2026-04')
 
   MemberItem({
     String? id,
@@ -17,10 +18,17 @@ class MemberItem {
     required this.grade,
     required this.phone,
     this.address = '',
-  }) : id = id ?? _generateId(name, birth, phone);
+    String? joinDate,
+  }) : id = id ?? _generateId(name, birth, phone),
+       joinDate = joinDate ?? _thisMonth();
+
+  /// 현재 월 반환 (예: '2026-04')
+  static String _thisMonth() {
+    final n = DateTime.now();
+    return '${n.year}-${n.month.toString().padLeft(2, '0')}';
+  }
 
   /// ID는 이름+생년월일+전화번호 조합으로 생성합니다.
-  /// 같은 사람이 중복 등록되는 걸 방지하는 데도 활용됩니다.
   static String _generateId(String name, String birth, String phone) {
     final cleaned = phone.replaceAll('-', '');
     return '${name}_${birth}_$cleaned';
@@ -36,15 +44,17 @@ class MemberItem {
     String? grade,
     String? phone,
     String? address,
+    String? joinDate,
   }) {
     return MemberItem(
-      id: id, // 수정해도 id는 바뀌지 않습니다.
+      id: id,
       name: name ?? this.name,
       gender: gender ?? this.gender,
       birth: birth ?? this.birth,
       grade: grade ?? this.grade,
       phone: phone ?? this.phone,
       address: address ?? this.address,
+      joinDate: joinDate ?? this.joinDate,
     );
   }
 
@@ -60,6 +70,7 @@ class MemberItem {
       'grade': grade,
       'phone': phone,
       'address': address,
+      'joinDate': joinDate, // ★ 추가
     };
   }
 
@@ -69,15 +80,14 @@ class MemberItem {
     final phone = (map['phone'] ?? '').toString();
 
     return MemberItem(
-      // 저장된 id가 있으면 그걸 쓰고, 없으면 새로 생성합니다.
       id: (map['id'] ?? '').toString().isNotEmpty ? map['id'].toString() : null,
       name: name,
       gender: (map['gender'] ?? '').toString(),
       birth: birth,
-      // 구버전 호환: 'level' 키로 저장된 데이터도 읽습니다.
       grade: (map['grade'] ?? map['level'] ?? '').toString(),
       phone: phone,
       address: (map['address'] ?? '').toString(),
+      joinDate: (map['joinDate'] ?? '').toString(), // ★ 추가
     );
   }
 

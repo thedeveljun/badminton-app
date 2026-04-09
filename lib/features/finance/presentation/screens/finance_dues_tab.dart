@@ -723,9 +723,9 @@ class DuesRow extends StatelessWidget {
                     Text(
                       record.paidDate,
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF555555),
+                        color: Color.fromARGB(255, 49, 49, 49),
                       ),
                     ),
                 ],

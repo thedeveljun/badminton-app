@@ -279,7 +279,7 @@ class TransactionRow extends StatelessWidget {
                       tx.date,
                       style: const TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w400,
                         color: Color(0xFF444444),
                       ),
                     ),
