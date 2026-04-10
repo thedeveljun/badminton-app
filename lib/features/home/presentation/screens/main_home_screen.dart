@@ -10,6 +10,7 @@ import '../../../members/utils/member_storage.dart';
 import '../../../tournament/presentation/screens/doubles_tournament_screen.dart';
 import '../../../finance/presentation/screens/club_finance_screen.dart';
 import '../../../finance/presentation/screens/finance_models.dart';
+import '../../../tournament/presentation/screens/doubles_tournament_screen.dart';
 
 // ── 점수판 import (badminton_score_app 통합) ──────────────────
 import 'package:funminton_club_app/features/scoreboard/presentation/pages/scoreboard_page.dart';
@@ -196,7 +197,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         Icons.grid_view_rounded,
         _K.tBg,
         _K.tTx,
-        () => _go(context, const DoublesTournamentScreen()),
+        () => _go(context, DoublesTournamentScreen()),
       ),
       // ★ 점수판 — 실제 ScoreboardPage 로 연결
       _Menu(

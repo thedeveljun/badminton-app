@@ -509,15 +509,15 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
         children: [
           Container(
             width: double.infinity,
-            color: const Color(0xFFD7E9F8),
+            color: const Color.fromARGB(255, 16, 42, 98),
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
             child: const Text(
               '단체회원 등록은 샘플을 다운받아 양식에 맞게 작성.\n엑셀업로드 버튼으로 여러 명 한꺼번에 등록 가능',
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w300,
                 height: 1.3,
-                color: Color(0xFF222222),
+                color: Color.fromARGB(255, 255, 254, 254),
                 letterSpacing: -0.2,
               ),
             ),

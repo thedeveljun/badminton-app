@@ -13,9 +13,8 @@ int tournamentAge(MemberItem m) {
 }
 
 enum RoundType {
-  same('동일급수', 'AA↔AA  BB↔BB  CC↔CC  DD↔DD', Color(0xFF4A7FB5)),
-  balanced('균형급수', 'AD↔BC  BB↔AC  CC↔BD', Color(0xFF5A9E6B)),
-  random('랜덤급수', '급수 무관  나이 차 최소화', Color(0xFF9B6BBB));
+  same('동일급수', 'AA↔AA  BB↔BB  CC↔CC  DD↔DD', Color(0xFF9C6BA0)),
+  balanced('균형급수', 'AD↔BC  BB↔AC  CC↔BD', Color(0xFF6AAE78));
 
   final String label;
   final String desc;
@@ -29,7 +28,10 @@ class TournamentTeam {
   const TournamentTeam(this.p1, this.p2);
   bool get isBye => p1 == null || p2 == null;
   double get avgAge {
-    final ages = [if (p1 != null) tournamentAge(p1!), if (p2 != null) tournamentAge(p2!)];
+    final ages = [
+      if (p1 != null) tournamentAge(p1!),
+      if (p2 != null) tournamentAge(p2!),
+    ];
     return ages.isEmpty ? 0 : ages.reduce((a, b) => a + b) / ages.length;
   }
 }
@@ -75,18 +77,21 @@ class TournamentEngine {
       roundIdx++;
       List<TournamentMatch> raw;
       switch (rt) {
-        case RoundType.same:     raw = _buildSame(byGrade);
-        case RoundType.balanced: raw = _buildBalanced(byGrade);
-        case RoundType.random:   raw = _buildRandom();
+        case RoundType.same:
+          raw = _buildSame(byGrade);
+        case RoundType.balanced:
+          raw = _buildBalanced(byGrade);
       }
       for (int i = 0; i < raw.length; i++) {
         final courtNo = (courtOffset + i) % courts + 1;
-        all.add(TournamentMatch(
-          roundType: raw[i].roundType,
-          courtNo: courtNo,
-          teamA: raw[i].teamA,
-          teamB: raw[i].teamB,
-        ));
+        all.add(
+          TournamentMatch(
+            roundType: raw[i].roundType,
+            courtNo: courtNo,
+            teamA: raw[i].teamA,
+            teamB: raw[i].teamB,
+          ),
+        );
       }
       courtOffset += raw.length;
       byGrade.forEach((_, list) => list.shuffle(_rng));
@@ -106,8 +111,14 @@ class TournamentEngine {
       }
       if (teams.length % 2 != 0) teams.add(TournamentTeam(null, null));
       for (int i = 0; i + 1 < teams.length; i += 2) {
-        matches.add(TournamentMatch(roundType: RoundType.same, courtNo: 0,
-            teamA: teams[i], teamB: teams[i + 1]));
+        matches.add(
+          TournamentMatch(
+            roundType: RoundType.same,
+            courtNo: 0,
+            teamA: teams[i],
+            teamB: teams[i + 1],
+          ),
+        );
       }
     }
     return matches;
@@ -120,62 +131,40 @@ class TournamentEngine {
     final c = _byAge(byGrade['C'] ?? []);
     final d = _byAge(byGrade['D'] ?? []);
 
-    matches.addAll(_pairTeams(_crossPair(a, d), _crossPair(b, c), RoundType.balanced));
-    matches.addAll(_pairTeams(_samePair(b), _crossPair(a, c), RoundType.balanced));
-    matches.addAll(_pairTeams(_samePair(c), _crossPair(b, d), RoundType.balanced));
-    return matches;
-  }
-
-  List<TournamentMatch> _buildRandom() {
-    final sorted = _byAge(players);
-    final teams = <TournamentTeam>[];
-    final usedP = <String>{};
-    for (int i = 0; i < sorted.length; i++) {
-      if (usedP.contains(sorted[i].id)) continue;
-      MemberItem? partner; int bestDiff = 9999;
-      for (int j = i + 1; j < sorted.length; j++) {
-        if (usedP.contains(sorted[j].id)) continue;
-        final diff = (tournamentAge(sorted[i]) - tournamentAge(sorted[j])).abs();
-        if (diff < bestDiff) { bestDiff = diff; partner = sorted[j]; }
-      }
-      if (partner != null) {
-        teams.add(TournamentTeam(sorted[i], partner));
-        usedP.add(sorted[i].id); usedP.add(partner.id);
-      }
-    }
-    final matches = <TournamentMatch>[];
-    final usedT = <int>{};
-    for (int i = 0; i < teams.length; i++) {
-      if (usedT.contains(i)) continue;
-      double best = double.infinity; int bestJ = -1;
-      for (int j = i + 1; j < teams.length; j++) {
-        if (usedT.contains(j)) continue;
-        final diff = (teams[i].avgAge - teams[j].avgAge).abs();
-        if (diff < best) { best = diff; bestJ = j; }
-      }
-      if (bestJ != -1) {
-        matches.add(TournamentMatch(roundType: RoundType.random, courtNo: 0,
-            teamA: teams[i], teamB: teams[bestJ]));
-        usedT.add(i); usedT.add(bestJ);
-      }
-    }
+    matches.addAll(
+      _pairTeams(_crossPair(a, d), _crossPair(b, c), RoundType.balanced),
+    );
+    matches.addAll(
+      _pairTeams(_samePair(b), _crossPair(a, c), RoundType.balanced),
+    );
+    matches.addAll(
+      _pairTeams(_samePair(c), _crossPair(b, d), RoundType.balanced),
+    );
     return matches;
   }
 
   List<MemberItem> _byAge(List<MemberItem> list) =>
-      List<MemberItem>.from(list)..sort((a, b) => tournamentAge(a) - tournamentAge(b));
+      List<MemberItem>.from(list)
+        ..sort((a, b) => tournamentAge(a) - tournamentAge(b));
 
   List<TournamentTeam> _crossPair(List<MemberItem> l1, List<MemberItem> l2) {
     final teams = <TournamentTeam>[];
     final used = <String>{};
     for (final p1 in l1) {
-      MemberItem? best; int bestDiff = 9999;
+      MemberItem? best;
+      int bestDiff = 9999;
       for (final p2 in l2) {
         if (used.contains(p2.id)) continue;
         final diff = (tournamentAge(p1) - tournamentAge(p2)).abs();
-        if (diff < bestDiff) { bestDiff = diff; best = p2; }
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          best = p2;
+        }
       }
-      if (best != null) { teams.add(TournamentTeam(p1, best)); used.add(best.id); }
+      if (best != null) {
+        teams.add(TournamentTeam(p1, best));
+        used.add(best.id);
+      }
     }
     return teams;
   }
@@ -189,18 +178,33 @@ class TournamentEngine {
     return teams;
   }
 
-  List<TournamentMatch> _pairTeams(List<TournamentTeam> listA, List<TournamentTeam> listB, RoundType rt) {
+  List<TournamentMatch> _pairTeams(
+    List<TournamentTeam> listA,
+    List<TournamentTeam> listB,
+    RoundType rt,
+  ) {
     final matches = <TournamentMatch>[];
     final usedB = <int>{};
     for (final tA in listA) {
-      double best = double.infinity; int bestIdx = -1;
+      double best = double.infinity;
+      int bestIdx = -1;
       for (int j = 0; j < listB.length; j++) {
         if (usedB.contains(j)) continue;
         final diff = (tA.avgAge - listB[j].avgAge).abs();
-        if (diff < best) { best = diff; bestIdx = j; }
+        if (diff < best) {
+          best = diff;
+          bestIdx = j;
+        }
       }
       if (bestIdx != -1) {
-        matches.add(TournamentMatch(roundType: rt, courtNo: 0, teamA: tA, teamB: listB[bestIdx]));
+        matches.add(
+          TournamentMatch(
+            roundType: rt,
+            courtNo: 0,
+            teamA: tA,
+            teamB: listB[bestIdx],
+          ),
+        );
         usedB.add(bestIdx);
       }
     }

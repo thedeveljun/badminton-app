@@ -11,7 +11,7 @@ class CourtSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10), // 12→10
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -26,10 +26,13 @@ class CourtSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // 코트 헤더 — 재정관리 네이비
+          // 코트 헤더
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ), // 11→8
             decoration: const BoxDecoration(
               color: Color(0xFF0A245C),
               borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
@@ -38,23 +41,23 @@ class CourtSection extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.sports_tennis_rounded,
-                  size: 15,
+                  size: 14,
                   color: Colors.white70,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Text(
                   '$courtNo 코트',
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Text(
                   '${matches.length}경기',
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: Colors.white60,
                     fontWeight: FontWeight.w500,
                   ),
@@ -101,18 +104,21 @@ class MatchBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: const EdgeInsets.fromLTRB(12, 7, 12, 7), // 14,9,14,9 → 12,7,12,7
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (showGameNum)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 5), // 8→5
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 2,
+                ), // 8,3→7,2
                 decoration: BoxDecoration(
                   color: match.roundType.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(5),
                   border: Border.all(
                     color: match.roundType.color.withValues(alpha: 0.3),
                   ),
@@ -120,7 +126,7 @@ class MatchBlock extends StatelessWidget {
                 child: Text(
                   '${gameNum}게임  ${match.roundType.label}',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
                     color: match.roundType.color,
                   ),
@@ -134,29 +140,29 @@ class MatchBlock extends StatelessWidget {
                 child: TeamBlock(team: match.teamA, label: 'A팀'),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 10), // 12→10
                 child: Column(
                   children: [
                     Container(
                       width: 1,
-                      height: 20,
+                      height: 16,
                       color: const Color(0xFFDDE3EC),
-                    ),
-                    const SizedBox(height: 4),
+                    ), // 20→16
+                    const SizedBox(height: 3), // 4→3
                     const Text(
                       'VS',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11, // 12→11
                         fontWeight: FontWeight.w800,
                         color: Color(0xFFAAAAAA),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3), // 4→3
                     Container(
                       width: 1,
-                      height: 20,
+                      height: 16,
                       color: const Color(0xFFDDE3EC),
-                    ),
+                    ), // 20→16
                   ],
                 ),
               ),
@@ -183,24 +189,27 @@ class TeamBlock extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 6,
+            vertical: 2,
+          ), // 8,3→6,2
           decoration: BoxDecoration(
             color: const Color(0xFFEEF4FB),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(5),
             border: Border.all(color: const Color(0xFFB8D0EC)),
           ),
           child: Text(
             label,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 11, // 12→11
               fontWeight: FontWeight.w700,
               color: Color(0xFF5B8ABB),
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4), // 6→4
         PlayerLine(player: team.p1),
-        const SizedBox(height: 6),
+        const SizedBox(height: 3), // 4→3
         PlayerLine(player: team.p2),
       ],
     );
@@ -217,15 +226,18 @@ class PlayerLine extends StatelessWidget {
     final p = player;
     if (p == null) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 6,
+          vertical: 2,
+        ), // 8,4→6,2
         decoration: BoxDecoration(
           color: const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(5),
         ),
         child: const Text(
           '부전승',
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: FontWeight.w500,
             color: Color(0xFFBBBBBB),
             fontStyle: FontStyle.italic,
@@ -235,39 +247,45 @@ class PlayerLine extends StatelessWidget {
     }
     return Row(
       children: [
-        Expanded(
-          child: Text(
-            p.name,
+        // 이름 + 성별 붙여서 표시
+        Flexible(
+          child: RichText(
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF111111),
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: p.name,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF111111),
+                  ),
+                ),
+                TextSpan(
+                  text: ' (${p.gender})',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF888888),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        const SizedBox(width: 4),
-        Text(
-          '(${p.gender})',
-          style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFF888888),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 10),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
           decoration: BoxDecoration(
             color: const Color(0xFFEEF4FB),
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.circular(4),
             border: Border.all(color: const Color(0xFFB8D0EC)),
           ),
           child: Text(
             p.grade,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w800,
               color: Color(0xFF5B8ABB),
             ),

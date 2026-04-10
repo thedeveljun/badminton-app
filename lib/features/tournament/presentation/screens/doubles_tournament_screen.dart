@@ -21,13 +21,12 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
   List<TournamentMatch> _matches = [];
   int _tabIndex = 0;
 
-  final Set<RoundType> _selectedRounds = {
-    RoundType.same,
-    RoundType.balanced,
-    RoundType.random,
-  };
+  final Set<RoundType> _selectedRounds = {RoundType.same, RoundType.balanced};
   int _courtCount = 3;
   int _gamesPerPlayer = 3;
+  String _matchType = '혼복'; // 남복 / 여복 / 혼복
+  String _searchQuery = ''; // 이름 검색어
+  bool _showSearch = false; // 검색창 표시 여부
 
   @override
   void initState() {
@@ -51,7 +50,13 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
 
   Map<String, List<MemberItem>> get _grouped {
     final g = <String, List<MemberItem>>{};
-    for (final m in _allMembers) {
+    // 종목에 따라 성별 필터링
+    final filtered = _allMembers.where((m) {
+      if (_matchType == '남복') return m.gender == '남';
+      if (_matchType == '여복') return m.gender == '여';
+      return true; // 혼복: 전체
+    }).toList();
+    for (final m in filtered) {
       g.putIfAbsent(m.grade, () => []).add(m);
     }
     return g;
@@ -131,7 +136,7 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
           ),
         ),
         title: const Text(
-          '복식 대진표',
+          '대진표',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -166,7 +171,7 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(44),
+          preferredSize: const Size.fromHeight(52),
           child: Container(
             decoration: const BoxDecoration(
               border: Border(
@@ -213,15 +218,20 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 child: SizedBox(
-                  height: 50,
+                  height: 40,
                   child: ElevatedButton(
                     onPressed: _canGen ? _generate : null,
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
-                      backgroundColor: const Color(0xFF5B8ABB),
-                      disabledBackgroundColor: const Color(0xFFCDD5DF),
+                      backgroundColor: const Color(0xFF0A245C),
+                      disabledBackgroundColor: const Color.fromARGB(
+                        255,
+                        49,
+                        85,
+                        158,
+                      ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     child: Text(
@@ -231,8 +241,8 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
                                 : '라운드 유형을 1개 이상 선택하세요')
                           : '대진표 생성  (${_selectedIds.length}명 · ${_courtCount}코트 · 1인 ${_gamesPerPlayer}게임)',
                       style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
                         color: Colors.white,
                       ),
                     ),
@@ -241,6 +251,78 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
               ),
             )
           : null,
+    );
+  }
+
+  // ── 급수별 섹션 (검색 필터 포함) ───────────────────────────────
+  Widget _buildGradeSection(String grade, List<MemberItem> members) {
+    final filtered =
+        (List<MemberItem>.from(members)
+              ..sort((a, b) => tournamentAge(a) - tournamentAge(b)))
+            .where((m) => _searchQuery.isEmpty || m.name.contains(_searchQuery))
+            .toList();
+
+    if (filtered.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GradeSectionHeader(
+          grade: grade,
+          total: members.length,
+          selected: members.where((m) => _selectedIds.contains(m.id)).length,
+        ),
+        const SizedBox(height: 5),
+        ...filtered.map(
+          (m) => MemberCheckRow(
+            member: m,
+            checked: _selectedIds.contains(m.id),
+            onChanged: (v) => setState(() {
+              if (v == true) {
+                _selectedIds.add(m.id);
+              } else {
+                _selectedIds.remove(m.id);
+              }
+              _courtCount = _recCourts(_selectedIds.length);
+            }),
+          ),
+        ),
+        const SizedBox(height: 10),
+      ],
+    );
+  }
+
+  // ── 종목 선택 버튼 ────────────────────────────────────────────
+  Widget _matchTypeBtn(String type, Color activeColor, Color activeBg) {
+    final isSelected = _matchType == type;
+    return GestureDetector(
+      onTap: () => setState(() {
+        _matchType = type;
+        _selectedIds.clear(); // 종목 변경 시 선택 초기화
+        _courtCount = _recCourts(0);
+      }),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        width: double.infinity, // Expanded 안에서 꽉 채움
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected ? activeBg : const Color(0xFFF6F7FA),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? activeColor : const Color(0xFFD4D8DE),
+            width: isSelected ? 1.8 : 1.0,
+          ),
+        ),
+        child: Text(
+          type,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: isSelected ? activeColor : const Color(0xFF888888),
+          ),
+        ),
+      ),
     );
   }
 
@@ -277,7 +359,143 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 100),
       children: [
-        GradeSummaryBar(grouped: grouped, selectedIds: _selectedIds),
+        // ── 종목 선택 + 이름찾기 ──────────────────────────────
+        Row(
+          children: [
+            // 이름찾기 버튼 (고정 너비)
+            GestureDetector(
+              onTap: () => setState(() {
+                _showSearch = !_showSearch;
+                if (!_showSearch) _searchQuery = '';
+              }),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 120),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: _showSearch
+                      ? const Color(0xFF0A245C)
+                      : const Color(0xFFF6F7FA),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _showSearch
+                        ? const Color(0xFF0A245C)
+                        : const Color(0xFFD4D8DE),
+                    width: 1.3,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _showSearch
+                          ? Icons.search_off_rounded
+                          : Icons.search_rounded,
+                      size: 14,
+                      color: _showSearch
+                          ? Colors.white
+                          : const Color(0xFF555555),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '이름찾기',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _showSearch
+                            ? Colors.white
+                            : const Color(0xFF555555),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // 종목 선택 — Expanded로 남은 공간 균등 배분
+            Expanded(
+              child: _matchTypeBtn(
+                '혼복',
+                const Color(0xFF6A9F6A),
+                const Color(0xFFE8F5E9),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _matchTypeBtn(
+                '남복',
+                const Color(0xFF4A7BBB),
+                const Color(0xFFE3F0FF),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _matchTypeBtn(
+                '여복',
+                const Color(0xFFB05B8A),
+                const Color(0xFFFCE4EC),
+              ),
+            ),
+          ],
+        ),
+        // 검색창
+        if (_showSearch) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 36,
+            child: TextField(
+              autofocus: true,
+              onChanged: (v) => setState(() => _searchQuery = v.trim()),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF222222)),
+              decoration: InputDecoration(
+                hintText: '이름 입력...',
+                hintStyle: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF9AA1AB),
+                ),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  size: 16,
+                  color: Color(0xFF9AA1AB),
+                ),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(
+                          Icons.clear,
+                          size: 16,
+                          color: Color(0xFF9AA1AB),
+                        ),
+                        onPressed: () => setState(() => _searchQuery = ''),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      )
+                    : null,
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFD4D8DE),
+                    width: 1.1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF5B8ABB),
+                    width: 1.4,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 8),
         if (_selectedIds.isNotEmpty) ...[
           CourtRecommendBanner(
@@ -315,34 +533,10 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
           ],
         ),
         const SizedBox(height: 10),
+        // 급수별 회원 목록 (검색 필터 적용)
         for (final grade in ['A', 'B', 'C', 'D', '초심'])
-          if (grouped.containsKey(grade)) ...[
-            GradeSectionHeader(
-              grade: grade,
-              total: grouped[grade]!.length,
-              selected: grouped[grade]!
-                  .where((m) => _selectedIds.contains(m.id))
-                  .length,
-            ),
-            const SizedBox(height: 5),
-            ...(List<MemberItem>.from(
-              grouped[grade]!,
-            )..sort((a, b) => tournamentAge(a) - tournamentAge(b))).map(
-              (m) => MemberCheckRow(
-                member: m,
-                checked: _selectedIds.contains(m.id),
-                onChanged: (v) => setState(() {
-                  if (v == true) {
-                    _selectedIds.add(m.id);
-                  } else {
-                    _selectedIds.remove(m.id);
-                  }
-                  _courtCount = _recCourts(_selectedIds.length);
-                }),
-              ),
-            ),
-            const SizedBox(height: 10),
-          ],
+          if (grouped.containsKey(grade))
+            _buildGradeSection(grade, grouped[grade]!),
       ],
     );
   }
@@ -384,7 +578,7 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
                   border: Border.all(color: const Color(0xFFB8D0EC)),
                 ),
                 child: const Text(
-                  '선택한 유형이 순서대로 반복됩니다.\n예) 동일+랜덤 선택 → 동일→랜덤→동일→랜덤 순으로 게임 구성',
+                  '선택한 유형이 순서대로 반복됩니다.\n예) 동일+균형 선택 → 동일→균형→동일→균형 순으로 게임 구성',
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.5,
@@ -408,19 +602,6 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
             ],
           ),
         ),
-        if (_selectedRounds.isNotEmpty && _gamesPerPlayer > 0) ...[
-          const SizedBox(height: 16),
-          SettingSection(
-            title: '구성 미리보기',
-            icon: Icons.preview_rounded,
-            child: Column(
-              children: List.generate(_gamesPerPlayer, (i) {
-                final rt = _orderedRounds[i % _orderedRounds.length];
-                return RoundPreviewRow(roundNum: i + 1, type: rt);
-              }),
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -452,25 +633,23 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
           width: double.infinity,
           color: const Color(0xFF0A245C),
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          child: Row(
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
             children: [
               _summaryChip(
                 '참가',
                 '${_selectedIds.length}명',
                 const Color(0xFF5B8ABB),
               ),
-              const SizedBox(width: 6),
               _summaryChip('코트', '$_courtCount코트', const Color(0xFF4A7FB5)),
-              const SizedBox(width: 6),
               _summaryChip(
                 '경기',
                 '${_matches.length}게임',
                 const Color(0xFF3A6FA5),
               ),
-              if (byeCount > 0) ...[
-                const SizedBox(width: 6),
+              if (byeCount > 0)
                 _summaryChip('부전승', '$byeCount', const Color(0xFFC58A00)),
-              ],
             ],
           ),
         ),
@@ -491,7 +670,7 @@ class _DoublesTournamentScreenState extends State<DoublesTournamentScreen> {
 
   Widget _summaryChip(String label, String value, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(8),

@@ -20,7 +20,7 @@ class TournamentTabBtn extends StatelessWidget {
     child: GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 44,
+        height: 52,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           border: Border(
@@ -110,7 +110,7 @@ class CourtSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rec = selectedCount > 0
-        ? (selectedCount / 4).floor().clamp(1, 10)
+        ? (selectedCount / 4).floor().clamp(1, 12)
         : 0;
     return Container(
       padding: const EdgeInsets.all(14),
@@ -125,7 +125,7 @@ class CourtSelector extends StatelessWidget {
           Wrap(
             spacing: 6,
             runSpacing: 6,
-            children: List.generate(10, (i) {
+            children: List.generate(12, (i) {
               final n = i + 1;
               final isSel = value == n;
               final isRec = n == rec;
@@ -133,8 +133,8 @@ class CourtSelector extends StatelessWidget {
                 onTap: () => onChanged(n),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 120),
-                  width: 52,
-                  height: 48,
+                  width: 40,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: isSel
                         ? const Color(0xFF5B8ABB)
@@ -158,7 +158,7 @@ class CourtSelector extends StatelessWidget {
                       Text(
                         '$n',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: isSel ? Colors.white : const Color(0xFF333333),
                         ),
@@ -167,7 +167,7 @@ class CourtSelector extends StatelessWidget {
                         Text(
                           '권장',
                           style: TextStyle(
-                            fontSize: 9,
+                            fontSize: 8,
                             color: isSel
                                 ? Colors.white70
                                 : const Color(0xFF5B8ABB),
@@ -217,15 +217,15 @@ class GamesPerPlayerSelector extends StatelessWidget {
           Wrap(
             spacing: 6,
             runSpacing: 6,
-            children: List.generate(5, (i) {
+            children: List.generate(6, (i) {
               final n = i + 1;
               final isSel = value == n;
               return GestureDetector(
                 onTap: () => onChanged(n),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 120),
-                  width: 68,
-                  height: 44,
+                  width: 40,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: isSel
                         ? const Color(0xFF5B8ABB)
@@ -240,9 +240,9 @@ class GamesPerPlayerSelector extends StatelessWidget {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    '$n 게임',
+                    '$n',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: isSel ? Colors.white : const Color(0xFF333333),
                     ),
@@ -253,7 +253,7 @@ class GamesPerPlayerSelector extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '선택: 1인당 $value게임 진행',
+            '선택: 1인당 $value 게임 진행',
             style: const TextStyle(fontSize: 11, color: Color(0xFF888888)),
           ),
         ],
@@ -282,7 +282,7 @@ class RoundOptionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: selected ? type.color.withValues(alpha: 0.07) : Colors.white,
+        color: selected ? type.color.withValues(alpha: 0.18) : Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: selected ? type.color : const Color(0xFFD4D8DE),
@@ -460,55 +460,7 @@ class GradeSummaryBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final grades = [
-      'A',
-      'B',
-      'C',
-      'D',
-      '초심',
-    ].where((g) => grouped.containsKey(g)).toList();
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEEF4FB),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFB8D0EC)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: grades.map((grade) {
-          final total = grouped[grade]?.length ?? 0;
-          final sel =
-              grouped[grade]?.where((m) => selectedIds.contains(m.id)).length ??
-              0;
-          return Column(
-            children: [
-              Text(
-                '$grade급',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF5B8ABB),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '$sel / $total',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: sel > 0
-                      ? const Color(0xFF111111)
-                      : const Color(0xFFCCCCCC),
-                ),
-              ),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const SizedBox.shrink(); // 박스 삭제
 }
 
 // ── 급수 섹션 헤더 ───────────────────────────────────────────
@@ -532,10 +484,10 @@ class GradeSectionHeader extends StatelessWidget {
           borderRadius: BorderRadius.circular(6),
         ),
         child: Text(
-          '$grade급',
+          '$grade조',
           style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
             color: Colors.white,
           ),
         ),
@@ -544,9 +496,9 @@ class GradeSectionHeader extends StatelessWidget {
       Text(
         '$selected / $total명 선택',
         style: const TextStyle(
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: FontWeight.w500,
-          color: Color(0xFF888888),
+          color: Color(0xFF444444),
         ),
       ),
     ],
@@ -570,11 +522,14 @@ class MemberCheckRow extends StatelessWidget {
     onTap: () => onChanged(!checked),
     child: AnimatedContainer(
       duration: const Duration(milliseconds: 100),
-      margin: const EdgeInsets.only(bottom: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 1.5), // 60% 좁힘
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 4,
+      ), // 20% 높이 축소
       decoration: BoxDecoration(
         color: checked ? const Color(0xFFEAF3FF) : Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: checked ? const Color(0xFF8CB8F2) : const Color(0xFFD4D8DE),
           width: 1.1,
@@ -603,7 +558,7 @@ class MemberCheckRow extends StatelessWidget {
                     text: member.name,
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: Colors.black,
                     ),
                   ),
@@ -618,9 +573,9 @@ class MemberCheckRow extends StatelessWidget {
                   TextSpan(
                     text: '  ${tournamentAge(member)}세',
                     style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF999999),
+                      fontSize: 15, // 나이 폰트 크게
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF666666),
                     ),
                   ),
                 ],
