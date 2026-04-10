@@ -11,6 +11,9 @@ import '../../../tournament/presentation/screens/doubles_tournament_screen.dart'
 import '../../../finance/presentation/screens/club_finance_screen.dart';
 import '../../../finance/presentation/screens/finance_models.dart';
 
+// ── 점수판 import (badminton_score_app 통합) ──────────────────
+import 'package:funminton_club_app/features/scoreboard/presentation/pages/scoreboard_page.dart';
+
 // ═══════════════════════════════════════════════════════════════
 // 색상 · 수치 상수
 // ═══════════════════════════════════════════════════════════════
@@ -81,20 +84,15 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
   // ── 데이터 로드 ───────────────────────────────────────────────
   Future<void> _loadStats() async {
-    // 1. 회원 데이터
     final members = await MemberStorage.loadMembers() ?? [];
-
-    // 2. 재정 데이터
     final transactions = await FinanceStorage.loadTx();
 
-    // 3. 신규회원 — 이번달 가입자
     final now = DateTime.now();
     final thisMonth = '${now.year}-${now.month.toString().padLeft(2, '0')}';
     final newCount = members
         .where((m) => m.joinDate.startsWith(thisMonth))
         .length;
 
-    // 4. 현재 잔액 — 수입 - 지출
     final income = transactions
         .where((t) => t.type == TransactionType.income)
         .fold(0, (int s, t) => s + t.amount);
@@ -121,6 +119,15 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     return n < 0 ? '-$buf' : '$buf';
   }
 
+  // ── 점수판 이동 ──────────────────────────────────────────────
+  Future<void> _goToScoreboard(BuildContext ctx) async {
+    await Navigator.push(
+      ctx,
+      MaterialPageRoute(builder: (_) => const ScoreboardPage()),
+    );
+    // 점수판 dispose에서 방향 복원하므로 여기선 추가 호출 불필요
+  }
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
@@ -129,10 +136,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       backgroundColor: _K.pageBg,
       body: Column(
         children: [
-          // ① 히어로 배너
           const _HeroBanner(),
-
-          // ② 통계바 — 실시간 데이터
           _StatBar(
             stats: [
               _Stat('$_totalMembers명', '회원수'),
@@ -141,8 +145,6 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             ],
             onRefresh: _loadStats,
           ),
-
-          // ③ 메뉴 그리드 + 이벤트
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -174,7 +176,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         _K.mTx,
         () async {
           await _go(context, const ClubMemberScreen());
-          _loadStats(); // 돌아왔을 때 새로고침
+          _loadStats();
         },
       ),
       _Menu(
@@ -185,7 +187,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         _K.fTx,
         () async {
           await _go(context, const ClubFinanceScreen());
-          _loadStats(); // 돌아왔을 때 새로고침
+          _loadStats();
         },
       ),
       _Menu(
@@ -196,13 +198,14 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         _K.tTx,
         () => _go(context, const DoublesTournamentScreen()),
       ),
+      // ★ 점수판 — 실제 ScoreboardPage 로 연결
       _Menu(
         '점수판',
         '자유게임 · 기록',
         Icons.scoreboard_rounded,
         _K.sBg,
         _K.sTx,
-        () => _snack(context, '점수판은 다음 단계에서 연결합니다.'),
+        () => _goToScoreboard(context),
       ),
     ];
 
@@ -356,7 +359,7 @@ class _StatBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onLongPress: onRefresh, // 길게 누르면 새로고침
+      onLongPress: onRefresh,
       child: Container(
         color: _K.statBg,
         child: Row(
@@ -406,7 +409,7 @@ class _StatBar extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 메뉴 카드 — 입체감 그림자
+// 메뉴 카드
 // ═══════════════════════════════════════════════════════════════
 class _MenuCard extends StatelessWidget {
   final _Menu menu;
@@ -415,97 +418,66 @@ class _MenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: _K.cardBg,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: menu.onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
           decoration: BoxDecoration(
             color: _K.cardBg,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: _K.cardBord),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF1246C8).withOpacity(0.15),
-                blurRadius: 12,
-                spreadRadius: 0,
-                offset: const Offset(0, 6),
-              ),
-              BoxShadow(
-                color: Colors.white.withOpacity(0.9),
-                blurRadius: 4,
-                spreadRadius: 0,
-                offset: const Offset(0, -2),
+                color: const Color(0xFF1246C8).withValues(alpha: 0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Stack(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Positioned(
-                top: 0,
-                right: 0,
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(16),
-                  ),
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: menu.bg,
-                      borderRadius: const BorderRadius.only(
-                        topRight: Radius.circular(16),
-                        bottomLeft: Radius.circular(38),
-                      ),
-                    ),
-                  ),
+              // 아이콘
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: menu.bg,
+                  borderRadius: BorderRadius.circular(10),
                 ),
+                child: Icon(menu.icon, size: 19, color: menu.tx),
               ),
-              Positioned(
-                bottom: 9,
-                right: 10,
-                child: Icon(
-                  Icons.chevron_right_rounded,
-                  size: 16,
-                  color: Colors.grey.shade300,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 11, 12, 9),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: menu.bg,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(menu.icon, size: 19, color: menu.tx),
+              // 텍스트
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    menu.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827),
+                      letterSpacing: -.2,
                     ),
-                    const Spacer(),
-                    Text(
-                      menu.title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
-                        letterSpacing: -.2,
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    menu.desc,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: menu.tx,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      menu.desc,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: menu.tx,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),

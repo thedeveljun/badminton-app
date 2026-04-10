@@ -1,0 +1,2 @@
+module funminton.club.app {
+}

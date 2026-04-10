@@ -18,42 +18,36 @@ class MemberSearchBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 40,
+      height: 38,
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         style: const TextStyle(
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.w400,
-          color: Color(0xFF333333),
-          letterSpacing: -0.2,
+          color: Color(0xFF222222),
         ),
         decoration: InputDecoration(
-          hintText: '이름',
-          hintStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF7A7A7A),
-            letterSpacing: -0.2,
-          ),
+          hintText: '이름 검색',
+          hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9AA1AB)),
           prefixIcon: const Icon(
             Icons.search,
-            size: 18,
-            color: Color(0xFF7A7A7A),
+            size: 16,
+            color: Color(0xFF9AA1AB),
           ),
           filled: true,
-          fillColor: const Color(0xFFF9FAFC),
+          fillColor: const Color(0xFFF6F7FA),
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
+            horizontal: 10,
+            vertical: 6,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFF9AA1AB), width: 1.2),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFFD4D8DE), width: 1.1),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFF7F8794), width: 1.4),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF5B8ABB), width: 1.4),
           ),
         ),
       ),
@@ -79,12 +73,12 @@ class MemberFilterBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 40,
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+      height: 38,
+      padding: const EdgeInsets.fromLTRB(10, 0, 4, 0),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFC),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF9AA1AB), width: 1.2),
+        color: const Color(0xFFF6F7FA),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD4D8DE), width: 1.1),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -93,7 +87,7 @@ class MemberFilterBox extends StatelessWidget {
           icon: const Icon(
             Icons.arrow_drop_down,
             size: 18,
-            color: Color(0xFF666666),
+            color: Color(0xFF9AA1AB),
           ),
           style: const TextStyle(
             fontSize: 12,
@@ -112,17 +106,13 @@ class MemberFilterBox extends StatelessWidget {
                   Positioned(
                     top: -4,
                     left: 0,
-                    child: Container(
-                      color: const Color(0xFFF9FAFC),
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: Text(
-                        label,
-                        style: const TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF7B7F86),
-                          height: 1.0,
-                        ),
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF5B8ABB),
+                        height: 1.0,
                       ),
                     ),
                   ),
@@ -151,7 +141,7 @@ class MemberFilterBox extends StatelessWidget {
   }
 }
 
-// ── 상단 필 버튼 ──────────────────────────────────────────────
+// ── 필 버튼 ──────────────────────────────────────────────────
 class MemberPillButton extends StatelessWidget {
   final String text;
   final bool enabled;
@@ -166,23 +156,19 @@ class MemberPillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = enabled
-        ? const Color(0xFF95A0AD)
-        : const Color(0xFFD2D7DF);
-    final textColor = enabled
-        ? const Color(0xFF53759B)
-        : const Color(0xFFC2C7D0);
-
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(8),
       onTap: enabled ? onTap : null,
       child: Container(
-        height: 29,
+        height: 28,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFC),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor, width: 1.2),
+          color: const Color(0xFFF6F7FA),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: enabled ? const Color(0xFF95A0AD) : const Color(0xFFD2D7DF),
+            width: 1.1,
+          ),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -190,7 +176,7 @@ class MemberPillButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: textColor,
+            color: enabled ? const Color(0xFF53759B) : const Color(0xFFC2C7D0),
             height: 1.0,
           ),
         ),

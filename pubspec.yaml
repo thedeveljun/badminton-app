@@ -20,6 +20,7 @@ dependencies:
   downloadsfolder: ^1.1.0
   shared_preferences: ^2.3.2
   url_launcher: ^6.3.1       # ← 전화걸기 기능 (신규 추가)
+  flutter_tts: ^4.2.0     # ← 이 줄 추가
 
 dev_dependencies:
   flutter_test:

@@ -2,12 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../members/domain/models/member_item.dart';
 import 'tournament_models.dart';
 
-// ============================================================
-// 복식 대진표 — 대진표 표시 위젯
-// (_CourtSection, _MatchBlock, _TeamBlock, _PlayerLine)
-// ============================================================
-
-/// 코트 카드 — 코트 헤더 + 해당 코트 경기 목록
+// ── 코트 섹션 ────────────────────────────────────────────────
 class CourtSection extends StatelessWidget {
   final int courtNo;
   final List<TournamentMatch> matches;
@@ -16,39 +11,74 @@ class CourtSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFD0D8E4)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFD4D8DE), width: 1),
         boxShadow: const [
-          BoxShadow(color: Color(0x0C000000), blurRadius: 8, offset: Offset(0, 3))
+          BoxShadow(
+            color: Color(0x08000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
         children: [
-          // 코트 헤더
+          // 코트 헤더 — 재정관리 네이비
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
             decoration: const BoxDecoration(
-              color: Color(0xFF5B8ABB),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(17)),
+              color: Color(0xFF0A245C),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
             ),
-            child: Text('${courtNo}코트',
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.sports_tennis_rounded,
+                  size: 15,
+                  color: Colors.white70,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '$courtNo 코트',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${matches.length}경기',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.white60,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
           // 경기 목록
           ...matches.asMap().entries.map((entry) {
-            return Column(children: [
-              if (entry.key > 0) const Divider(height: 1, color: Color(0xFFECEFF4)),
-              MatchBlock(
-                match: entry.value,
-                gameNum: entry.key + 1,
-                showGameNum: matches.length > 1,
-              ),
-            ]);
+            return Column(
+              children: [
+                if (entry.key > 0)
+                  const Divider(
+                    height: 1,
+                    color: Color(0xFFECEFF4),
+                    indent: 16,
+                  ),
+                MatchBlock(
+                  match: entry.value,
+                  gameNum: entry.key + 1,
+                  showGameNum: matches.length > 1,
+                ),
+              ],
+            );
           }),
         ],
       ),
@@ -56,7 +86,7 @@ class CourtSection extends StatelessWidget {
   }
 }
 
-/// 경기 블록 — A팀 | VS | B팀 가로 배치
+// ── 경기 블록 ────────────────────────────────────────────────
 class MatchBlock extends StatelessWidget {
   final TournamentMatch match;
   final int gameNum;
@@ -71,46 +101,68 @@ class MatchBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 게임번호 + 라운드 유형 배지
           if (showGameNum)
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.only(bottom: 8),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: match.roundType.color.withOpacity(0.15),
+                  color: match.roundType.color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: match.roundType.color.withValues(alpha: 0.3),
+                  ),
                 ),
-                child: Text('${gameNum}게임  ${match.roundType.label}',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: match.roundType.color)),
+                child: Text(
+                  '${gameNum}게임  ${match.roundType.label}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: match.roundType.color,
+                  ),
+                ),
               ),
             ),
-
-          // A팀 | VS | B팀
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(child: TeamBlock(team: match.teamA, label: 'A팀')),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Column(children: [
-                  Container(width: 1, height: 24, color: const Color(0xFFDDE3EC)),
-                  const SizedBox(height: 6),
-                  const Text('VS',
-                      style: TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFFAAAAAA))),
-                  const SizedBox(height: 6),
-                  Container(width: 1, height: 24, color: const Color(0xFFDDE3EC)),
-                ]),
+              Expanded(
+                child: TeamBlock(team: match.teamA, label: 'A팀'),
               ),
-              Expanded(child: TeamBlock(team: match.teamB, label: 'B팀')),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 1,
+                      height: 20,
+                      color: const Color(0xFFDDE3EC),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'VS',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFAAAAAA),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      width: 1,
+                      height: 20,
+                      color: const Color(0xFFDDE3EC),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: TeamBlock(team: match.teamB, label: 'B팀'),
+              ),
             ],
           ),
         ],
@@ -119,7 +171,7 @@ class MatchBlock extends StatelessWidget {
   }
 }
 
-/// 팀 블록 — 팀 라벨 + 선수 2명
+// ── 팀 블록 ─────────────────────────────────────────────────
 class TeamBlock extends StatelessWidget {
   final TournamentTeam team;
   final String label;
@@ -131,25 +183,31 @@ class TeamBlock extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
             color: const Color(0xFFEEF4FB),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: const Color(0xFFB8D0EC)),
           ),
-          child: Text(label,
-              style: const TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF5B8ABB))),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF5B8ABB),
+            ),
+          ),
         ),
-        const SizedBox(height: 10),
-        PlayerLine(player: team.p1),
         const SizedBox(height: 8),
+        PlayerLine(player: team.p1),
+        const SizedBox(height: 6),
         PlayerLine(player: team.p2),
       ],
     );
   }
 }
 
-/// 선수 한 줄 — 이름(크게) + 성별 + 급수 / 부전승 처리
+// ── 선수 한 줄 ───────────────────────────────────────────────
 class PlayerLine extends StatelessWidget {
   final MemberItem? player;
   const PlayerLine({super.key, required this.player});
@@ -158,30 +216,64 @@ class PlayerLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = player;
     if (p == null) {
-      return const Text('부전승',
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: const Text(
+          '부전승',
           style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFFBBBBBB),
-              fontStyle: FontStyle.italic));
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFFBBBBBB),
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
     }
-    return RichText(
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      text: TextSpan(children: [
-        TextSpan(text: p.name,
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            p.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-                fontSize: 20, fontWeight: FontWeight.w800,
-                color: Color(0xFF111111), height: 1.2)),
-        TextSpan(text: ' (${p.gender})',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111111),
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          '(${p.gender})',
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF888888),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEEF4FB),
+            borderRadius: BorderRadius.circular(5),
+            border: Border.all(color: const Color(0xFFB8D0EC)),
+          ),
+          child: Text(
+            p.grade,
             style: const TextStyle(
-                fontSize: 15, fontWeight: FontWeight.w500,
-                color: Color(0xFF666666), height: 1.2)),
-        TextSpan(text: '  ${p.grade}',
-            style: const TextStyle(
-                fontSize: 17, fontWeight: FontWeight.w800,
-                color: Color(0xFF5B8ABB), height: 1.2)),
-      ]),
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF5B8ABB),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

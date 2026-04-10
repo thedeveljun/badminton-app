@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 
 class HomeMenuCard extends StatelessWidget {
   final IconData icon;
@@ -19,7 +17,7 @@ class HomeMenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.white,
+      color: Colors.white,
       borderRadius: BorderRadius.circular(26),
       child: InkWell(
         borderRadius: BorderRadius.circular(26),
@@ -43,13 +41,13 @@ class HomeMenuCard extends StatelessWidget {
                 width: 74,
                 height: 74,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryLight2,
+                  color: const Color(0xFFDCEBFF), // primaryLight2 대체
                   borderRadius: BorderRadius.circular(22),
                 ),
                 child: Icon(
                   icon,
                   size: 38,
-                  color: AppColors.primary,
+                  color: const Color(0xFF1246C8), // primary 대체
                 ),
               ),
               const SizedBox(height: 16),
@@ -57,27 +55,44 @@ class HomeMenuCard extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.menuCardTitle,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1E5DB8),
+                  height: 1.1,
+                  letterSpacing: -0.4,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 subtitle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.menuCardSubtitle,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF111111),
+                  height: 1.3,
+                  letterSpacing: -0.1,
+                ),
               ),
               const Spacer(),
               const Row(
                 children: [
                   Text(
                     '바로가기',
-                    style: AppTextStyles.linkText,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1246C8),
+                      letterSpacing: -0.2,
+                    ),
                   ),
                   SizedBox(width: 4),
                   Icon(
                     Icons.arrow_forward_rounded,
                     size: 18,
-                    color: AppColors.primary,
+                    color: Color(0xFF1246C8), // primary 대체
                   ),
                 ],
               ),
