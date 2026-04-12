@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="coway_app"
+        android:label="코웨이 통합관리"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

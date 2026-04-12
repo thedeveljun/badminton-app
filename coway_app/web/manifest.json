@@ -1,11 +1,12 @@
 {
-    "name": "coway_app",
-    "short_name": "coway_app",
-    "start_url": ".",
+    "name": "코웨이 통합관리",
+    "short_name": "통합관리",
+    "start_url": "./",
+    "scope": "./",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#5BB4F0",
+    "theme_color": "#4A9FE8",
+    "description": "코웨이 팀 주간·월간 실적과 팀원을 통합 관리합니다.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

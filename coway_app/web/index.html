@@ -14,22 +14,40 @@
     This is a placeholder for base href that will be replaced by the value of
     the `--base-href` argument provided to `flutter build`.
   -->
-  <base href="$FLUTTER_BASE_HREF">
+  <base href="$FLUTTER_BASE_HREF" id="app-base">
+  <script>
+  (function () {
+    var b = document.getElementById('app-base');
+    if (!b) return;
+    var host = location.hostname;
+    var parts = location.pathname.split('/').filter(function (p) { return p.length; });
+    if (host.indexOf('github.io') !== -1 && parts.length) {
+      b.href = '/' + parts[0] + '/';
+      return;
+    }
+    var raw = b.getAttribute('href') || '';
+    if (raw.indexOf('FLUTTER_BASE_HREF') !== -1) b.href = '/';
+  })();
+  </script>
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="코웨이 팀 주간·월간 실적과 팀원을 통합 관리합니다.">
+  <meta name="theme-color" content="#4A9FE8">
 
-  <!-- iOS meta tags & icons -->
+  <!-- iOS / Android home screen -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="coway_app">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="코웨이 통합관리">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>coway_app</title>
+  <title>코웨이 통합관리</title>
   <style>
 :root{
   --blue:#0057B8;--blue2:#0071E3;--sky:#E8F2FF;--sky2:#C5D9F5;
@@ -389,6 +407,28 @@ body{
   font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:6px;
 }
 .btn-prim:active{opacity:.88;}
+
+/* PWA install hint */
+.pwa-install-strip{
+  position:fixed;left:12px;right:12px;bottom:calc(var(--nav-h) + var(--safe-b) + 10px);
+  z-index:400;max-width:430px;margin-left:auto;margin-right:auto;
+  background:#153a62;color:#fff;border-radius:14px;padding:11px 12px;
+  box-shadow:0 6px 24px rgba(0,0,0,.18);font-size:13px;line-height:1.4;
+  display:none;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.12);
+}
+.pwa-install-strip.show{display:flex;}
+.pwa-install-text{flex:1;min-width:0;margin:0;}
+.btn-pwa-install{
+  flex-shrink:0;padding:9px 14px;background:#fff;color:var(--blue);
+  border:none;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;
+  font-family:inherit;
+}
+.btn-pwa-install:active{opacity:.88;}
+.pwa-install-close{
+  flex-shrink:0;width:32px;height:32px;border:none;border-radius:50%;
+  background:rgba(255,255,255,.14);color:#fff;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;line-height:1;
+}
   </style>
   <link rel="manifest" href="manifest.json">
 </head>
@@ -404,7 +444,7 @@ body{
 <div id="app">
   <div class="topbar">
     <div>
-      <div class="topbar-title">🏠 코웨이 실적관리</div>
+      <div class="topbar-title">🏠 코웨이 통합관리</div>
       <div class="topbar-sub" id="tb-date"></div>
     </div>
     <div class="topbar-right">
@@ -494,6 +534,12 @@ body{
 
     <button class="btn-prim" onclick="saveMemberInfo()">저장</button>
   </div>
+</div>
+
+<div id="pwa-install-strip" class="pwa-install-strip" role="region" aria-label="앱 설치 안내">
+  <p class="pwa-install-text" id="pwa-install-msg"></p>
+  <button type="button" class="btn-pwa-install" id="pwa-install-btn" hidden>앱 설치</button>
+  <button type="button" class="pwa-install-close" id="pwa-install-dismiss" title="닫기" aria-label="닫기">✕</button>
 </div>
 
 <div id="toast"></div>
@@ -1169,8 +1215,76 @@ function init(){
     `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${['일','월','화','수','목','금','토'][d.getDay()]})`;
   bindPhoneInputs();
   renderDash();
+  setupPwaInstallUi();
 }
 init();
+
+let pwaDeferredPrompt=null;
+function isPwaStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches
+    || window.matchMedia('(display-mode: window-controls-overlay)').matches
+    || window.navigator.standalone===true;
+}
+function setupPwaInstallUi(){
+  if(isPwaStandalone()) return;
+  const strip=document.getElementById('pwa-install-strip');
+  const btn=document.getElementById('pwa-install-btn');
+  const msg=document.getElementById('pwa-install-msg');
+  const dismiss=document.getElementById('pwa-install-dismiss');
+  if(!strip||!msg||!dismiss) return;
+  const ua=navigator.userAgent||'';
+  const dismissed=sessionStorage.getItem('pwaInstallDismissed')==='1';
+  const isIOS=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const isHttpLan=location.protocol==='http:'&&location.hostname!=='localhost'&&location.hostname!=='127.0.0.1';
+
+  function showStrip(text, showBtn){
+    if(dismissed) return;
+    msg.textContent=text;
+    btn.hidden=!showBtn;
+    strip.classList.add('show');
+  }
+
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    pwaDeferredPrompt=e;
+    showStrip('홈 화면에 추가하면 앱처럼 바로 실행할 수 있습니다.', true);
+  });
+
+  if(btn){
+    btn.addEventListener('click', async function(){
+      if(!pwaDeferredPrompt) return;
+      pwaDeferredPrompt.prompt();
+      await pwaDeferredPrompt.userChoice;
+      pwaDeferredPrompt=null;
+      strip.classList.remove('show');
+    });
+  }
+  dismiss.addEventListener('click', function(){
+    strip.classList.remove('show');
+    sessionStorage.setItem('pwaInstallDismissed','1');
+  });
+
+  if(dismissed) return;
+
+  if(isIOS&&!isPwaStandalone()){
+    if(/CriOS|FxiOS|EdgiOS/.test(ua)){
+      showStrip('브라우저 메뉴(⋮)에서 "홈 화면에 추가" 또는 "앱 설치"를 선택하세요.', false);
+    }else{
+      showStrip('하단 공유(□↑) → "홈 화면에 추가"를 누르면 홈 화면에 아이콘이 생깁니다.', false);
+    }
+    return;
+  }
+
+  if(isHttpLan&&/Mobile|Android|iPhone/i.test(ua)){
+    showStrip('이 주소(http)에서는 자동 설치가 제한될 수 있습니다. 배포(HTTPS) 주소로 열면 "앱 설치"가 표시되거나, 브라우저 메뉴에서 홈 화면에 추가하세요.', false);
+  }
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('service-worker.js').catch(function () {});
+  });
+}
   </script>
 </body>
 </html>
