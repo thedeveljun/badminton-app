@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0057B8">
+<title>코웨이 실적관리</title>
+<style>
+:root{
+  --blue:#0057B8;--blue2:#0071E3;--sky:#E8F2FF;--sky2:#C5D9F5;
+  --kodak:#0057B8;--kodi:#C2185B;--kodi-lt:#FCE4EC;--kodak-lt:#E3F0FF;
+  --green:#2E7D32;--amber:#E65100;
+  --call:#1B8C3A;--call-lt:#E6F4EA;
+  --bg:#F2F4F8;--surf:#FFFFFF;--surf2:#F8F9FC;
+  --bd:#E4E8EF;--text:#111827;--text2:#6B7280;--text3:#9CA3AF;
+  --r:16px;--rs:10px;--sh:0 2px 12px rgba(0,0,0,.08);
+  --nav-h:68px;--top-h:56px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{
+  font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  color:var(--text);font-size:14px;line-height:1.5;
+}
+#app{
+  display:flex;flex-direction:column;height:100vh;height:100dvh;
+  max-width:430px;margin:0 auto;background:var(--bg);overflow:hidden;
+}
+.pages{flex:1;overflow:hidden;position:relative;}
+.page{
+  position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-bottom:calc(var(--nav-h)+16px+var(--safe-b));display:none;
+}
+.page.active{display:block;}
+
+/* TopBar */
+.topbar{
+  height:var(--top-h);padding:0 16px;padding-top:var(--safe-t);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--blue);color:#fff;flex-shrink:0;
+}
+.topbar-title{font-size:16px;font-weight:500;letter-spacing:-.2px;}
+.topbar-sub{font-size:11px;opacity:.72;margin-top:1px;}
+.topbar-right{display:flex;gap:6px;}
+.icon-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,.16);border:none;color:#fff;font-size:17px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+}
+
+/* BottomNav */
+.bottomnav{
+  height:var(--nav-h);flex-shrink:0;background:var(--surf);
+  border-top:1px solid var(--bd);display:grid;grid-template-columns:repeat(4,1fr);
+  padding-bottom:var(--safe-b);
+}
+.nav-tab{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;color:var(--text3);font-size:12px;font-weight:500;
+  padding:8px 0;border:none;background:none;cursor:pointer;transition:color .15s;
+}
+.nav-tab .ni{font-size:24px;line-height:1;transition:transform .15s;}
+.nav-tab.active{color:var(--blue);font-weight:600;}
+.nav-tab.active .ni{transform:scale(1.1);}
+
+/* Common */
+.section{padding:14px 14px 0;}
+.sec-title{font-size:13px;font-weight:500;color:var(--text);}
+.card{
+  background:var(--surf);border-radius:var(--r);box-shadow:var(--sh);
+  overflow:hidden;margin-bottom:12px;
+}
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fi{animation:up .28s ease both;}
+.chip{
+  display:inline-block;font-size:10px;padding:1px 6px;border-radius:20px;
+  font-weight:700;vertical-align:middle;
+}
+.chip.kodak{background:var(--kodak-lt);color:var(--kodak);}
+.chip.kodi{background:var(--kodi-lt);color:var(--kodi);}
+
+/* Toast */
+#toast{
+  position:fixed;top:calc(var(--top-h)+12px);left:50%;
+  transform:translateX(-50%) translateY(-8px);
+  background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:24px;
+  font-size:13px;font-weight:600;opacity:0;transition:all .25s;
+  pointer-events:none;z-index:300;white-space:nowrap;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* Dashboard */
+.hero{
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue2) 100%);
+  padding:14px 16px 16px;color:#fff;
+}
+.hero-label{font-size:12px;opacity:.72;margin-bottom:3px;}
+.hero-week{font-size:20px;font-weight:500;letter-spacing:-.2px;}
+.hero-date{font-size:12px;opacity:.62;margin-top:2px;}
+.hero-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+.hero-stat{
+  background:rgba(255,255,255,.16);border-radius:12px;padding:7px 8px;text-align:center;
+}
+.hero-stat-val{font-size:32px;font-weight:700;line-height:1.1;}
+.hero-stat-lbl{font-size:13px;font-weight:400;opacity:1;margin-top:4px;}
+
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.kpi{
+  background:var(--surf);border-radius:12px;padding:6px 8px;text-align:center;box-shadow:var(--sh);
+}
+.kpi-v{font-size:20px;font-weight:800;margin-bottom:1px;}
+.kpi-l{font-size:12px;color:var(--text2);font-weight:500;}
+.kpi.nw .kpi-v{color:var(--blue);}
+.kpi.gn .kpi-v{color:var(--green);}
+.kpi.am .kpi-v{color:var(--amber);}
+
+.rank-row{
+  display:flex;align-items:center;gap:10px;padding:7px 14px;border-bottom:1px solid var(--bd);
+}
+.rank-row:last-child{border-bottom:none;}
+.rnk{
+  width:20px;height:20px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;
+}
+.rnk.g{background:#FFF8E1;color:#F9A825;}
+.rnk.s{background:#F5F5F5;color:#757575;}
+.rnk.b{background:#FBE9E7;color:#BF360C;}
+.rnk.n{background:var(--bd);color:var(--text2);}
+.bm{display:flex;gap:4px;margin-top:3px;}
+.bt{flex:1;height:4px;background:var(--bd);border-radius:3px;overflow:hidden;}
+.bf{height:100%;border-radius:3px;}
+.bf.nw{background:var(--blue);}
+.bf.gn{background:var(--green);}
+.bf.am{background:var(--amber);}
+
+/* Weekly */
+.week-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;background:var(--surf);border-bottom:1px solid var(--bd);
+}
+.wn-btn{
+  width:36px;height:36px;border-radius:50%;background:var(--sky);border:none;
+  color:var(--blue);font-size:18px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-weight:700;
+}
+.wn-title{font-size:18px;font-weight:800;color:var(--blue);}
+.wn-date{font-size:11px;color:var(--text2);margin-top:1px;}
+
+.view-tabs{display:flex;background:var(--surf2);border-bottom:1px solid var(--bd);}
+.vt{
+  flex:1;padding:13px 0;text-align:center;font-size:16px;font-weight:500;
+  color:var(--text3);border-bottom:2.5px solid transparent;cursor:pointer;transition:all .15s;
+}
+.vt.active{
+  color:var(--blue);border-bottom-color:var(--blue);background:var(--surf);
+  font-size:17px;font-weight:600;
+}
+
+.mem-scroll{
+  display:flex;gap:8px;overflow-x:auto;padding:10px 14px;background:var(--surf);
+  border-bottom:1px solid var(--bd);scrollbar-width:none;
+}
+.mem-scroll::-webkit-scrollbar{display:none;}
+.mem-chip{
+  flex-shrink:0;padding:7px 13px;border-radius:20px;background:var(--bg);
+  border:1.5px solid var(--bd);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
+}
+.mem-chip.ak{background:var(--kodak-lt);border-color:var(--kodak);color:var(--kodak);}
+.mem-chip.ai{background:var(--kodi-lt);border-color:var(--kodi);color:var(--kodi);}
+
+.wsum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 14px 6px;}
+.ws{
+  background:var(--surf);border-radius:10px;padding:9px 4px;text-align:center;box-shadow:var(--sh);
+}
+.ws-v{font-size:18px;font-weight:600;}
+.ws-l{font-size:12px;color:var(--text2);font-weight:600;margin-top:1px;}
+.ws.tot .ws-v,.ws.nw .ws-v{color:var(--blue);}
+.ws.gn .ws-v{color:var(--green);}
+.ws.am .ws-v{color:var(--amber);}
+
+/* Weekly input unified box */
+.num-wrap{display:flex;align-items:center;justify-content:center;}
+.num-input{
+  width:52px;height:34px;border:1.5px solid var(--bd);border-radius:8px;
+  text-align:center;font-size:16px;font-weight:600;background:#fff;outline:none;
+  -moz-appearance:textfield;
+}
+.num-input::-webkit-outer-spin-button,
+.num-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.num-input:focus{border-color:var(--blue);}
+.num-input.nw{color:var(--blue);}
+.num-input.gn{color:var(--green);}
+.num-input.am{color:var(--amber);}
+
+/* Status table */
+.status-wrap{padding:10px 14px 4px;}
+.seg{
+  display:flex;background:var(--bg);border:1px solid var(--bd);border-radius:10px;
+  padding:3px;gap:2px;margin-bottom:10px;
+}
+.sb{
+  flex:1;padding:7px 2px;border-radius:7px;border:none;background:transparent;
+  font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s;
+}
+.sb.on{background:var(--surf);box-shadow:var(--sh);}
+.sb.on.c0{color:var(--blue);}
+.sb.on.c1{color:var(--blue);}
+.sb.on.c2{color:var(--green);}
+.sb.on.c3{color:var(--amber);}
+.tbl-wrap{
+  overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--rs);
+  box-shadow:var(--sh);margin-bottom:12px;
+}
+.tbl-wrap::-webkit-scrollbar{height:3px;}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px;}
+.stbl{border-collapse:collapse;background:var(--surf);font-size:12px;white-space:nowrap;}
+.cn{
+  position:sticky;left:0;z-index:3;background:var(--surf2);width:68px;min-width:68px;
+  padding:5px 6px 5px 10px;font-weight:700;font-size:11px;text-align:left;border-right:2px solid var(--bd);
+}
+.stbl thead .cn{background:#EDF2FA;color:var(--text2);font-size:10px;font-weight:700;}
+.cd{
+  min-width:40px;padding:7px 3px;font-size:11px;font-weight:700;color:var(--text2);
+  background:#EDF2FA;text-align:center;border-bottom:1px solid var(--bd);
+}
+.cd.tdy{background:#DDE8F8;color:var(--blue);}
+.cd.wkd{color:#C62828;}
+.dcel{
+  min-width:40px;padding:6px 3px;font-size:13px;font-weight:700;color:var(--text);
+  text-align:center;border-bottom:1px solid var(--bd);
+}
+.dcel.zero{color:var(--text3);font-weight:400;font-size:12px;}
+.dcel.tdy{background:#F0F6FF;}
+.cs{
+  width:42px;min-width:42px;padding:9px 6px;background:var(--sky);font-size:13px;
+  font-weight:800;color:var(--blue);text-align:center;border-left:2px solid var(--sky2);
+  position:sticky;right:0;z-index:3;border-bottom:1px solid var(--sky2);
+}
+.stbl thead .cs{background:#DDE8F8;font-size:10px;font-weight:700;color:var(--blue);}
+.tr-team .cn{background:#DDE8F8;font-size:11px;}
+.tr-team .dcel{background:var(--sky);font-weight:800;color:var(--blue);border-top:2px solid var(--sky2);}
+.tr-team .cs{background:#C5D9F5;font-size:14px;border-top:2px solid var(--sky2);}
+
+/* Monthly */
+.month-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;background:var(--surf);border-bottom:1px solid var(--bd);
+}
+.mn-btn{
+  width:36px;height:36px;border-radius:50%;background:var(--sky);border:none;
+  color:var(--blue);font-size:18px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-weight:700;
+}
+.mn-title{font-size:16px;font-weight:700;color:var(--blue);}
+.mkpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 14px;}
+.mkpi-c{
+  background:var(--surf);border-radius:12px;padding:7px 8px;text-align:center;box-shadow:var(--sh);
+}
+.mkpi-v{font-size:28px;font-weight:500;line-height:1.1;}
+.mkpi-l{font-size:13px;color:var(--text2);font-weight:600;margin-top:2px;}
+.mkpi-c.nw .mkpi-v{color:var(--blue);}
+.mkpi-c.gn .mkpi-v{color:var(--green);}
+.mkpi-c.am .mkpi-v{color:var(--amber);}
+
+.mtbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.mtbl{width:100%;border-collapse:collapse;font-size:13px;min-width:310px;}
+.mtbl th{
+  background:var(--surf2);padding:5px 6px;text-align:center;font-weight:600;
+  font-size:11px;color:var(--text2);border-bottom:1px solid var(--bd);
+}
+.mtbl td{padding:5px 6px;text-align:center;border-bottom:1px solid var(--bd);font-weight:500;}
+.mtbl tr:last-child td{border-bottom:none;}
+.mtbl .ncl{text-align:left;font-weight:700;padding-left:12px;white-space:nowrap;}
+.mtbl .totrow td{background:var(--sky);font-weight:700;color:var(--blue);}
+
+/* Members */
+.mem-item{
+  background:var(--surf);border-radius:var(--rs);box-shadow:var(--sh);
+  margin-bottom:5px;overflow:hidden;
+}
+.mem-top{display:flex;align-items:center;gap:8px;padding:6px 12px 3px;}
+.mem-info{flex:1;min-width:0;}
+.mem-name{font-size:15px;font-weight:600;line-height:1.1;}
+.mem-sub{
+  font-size:10px;font-weight:300;color:var(--text3);margin-left:6px;
+}
+.phone-row{
+  display:flex;align-items:center;gap:6px;padding:0 12px 6px;
+}
+.phone-num{
+  flex:1;font-size:17px;font-weight:400;color:#111827;letter-spacing:.6px;
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.phone-num.empty{
+  color:var(--text3);font-style:italic;font-weight:400;font-size:14px;letter-spacing:0;
+}
+.edit-btn{
+  width:30px;height:30px;border-radius:50%;background:var(--bg);border:1.5px solid var(--bd);
+  color:var(--text2);font-size:13px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;
+}
+.edit-btn:active{background:var(--sky);border-color:var(--blue);}
+.call-btn{
+  display:inline-flex;align-items:center;gap:4px;padding:7px 12px;background:var(--call-lt);
+  color:var(--call);border:1.5px solid #A8D5B5;border-radius:22px;font-size:12px;
+  font-weight:800;cursor:pointer;white-space:nowrap;text-decoration:none;flex-shrink:0;transition:all .15s;
+}
+.call-btn:active{background:var(--call);color:#fff;}
+.call-btn.disabled{
+  background:var(--bg);color:var(--text3);border-color:var(--bd);pointer-events:none;cursor:default;
+}
+.del-btn{
+  width:26px;height:26px;border-radius:50%;background:var(--bg);border:1.5px solid var(--bd);
+  color:var(--text2);font-size:12px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;
+}
+.del-btn:active{background:#FFEBEE;border-color:#EF9A9A;color:#C62828;}
+
+/* FAB */
+.fab{
+  position:fixed;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;
+  background:var(--blue);color:#fff;font-size:26px;border:none;
+  box-shadow:0 4px 16px rgba(0,87,184,.4);display:none;align-items:center;
+  justify-content:center;cursor:pointer;z-index:999;
+}
+.fab:active{transform:scale(.92);}
+
+/* Sheet */
+.ov{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.ov.show{opacity:1;pointer-events:auto;}
+.sheet{
+  position:fixed;left:50%;transform:translateX(-50%) translateY(100%);bottom:0;
+  width:92%;max-width:380px;background:var(--surf);border-radius:20px 20px 0 0;
+  z-index:101;transition:transform .3s cubic-bezier(.32,0,.67,0);padding-bottom:var(--safe-b);
+}
+.sheet.show{transform:translateX(-50%) translateY(0);}
+.sh-handle{width:36px;height:4px;background:var(--bd);border-radius:2px;margin:12px auto 14px;}
+.sh-title{font-size:16px;font-weight:800;padding:0 16px 14px;border-bottom:1px solid var(--bd);}
+.sh-body{padding:16px;max-height:72vh;overflow-y:auto;}
+.fl{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block;}
+.finput{
+  width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:10px;
+  font-size:14px;font-family:inherit;color:var(--text);background:var(--bg);
+  outline:none;transition:border .15s;-webkit-appearance:none;
+}
+.finput:focus{border-color:var(--blue);background:#fff;}
+.type-sel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.to{
+  padding:12px;border:2px solid var(--bd);border-radius:10px;text-align:center;
+  cursor:pointer;transition:all .15s;
+}
+.to.sk{border-color:var(--kodak);background:var(--kodak-lt);}
+.to.si{border-color:var(--kodi);background:var(--kodi-lt);}
+.to-icon{font-size:24px;margin-bottom:4px;}
+.to-name{font-size:13px;font-weight:800;}
+.to-desc{font-size:10px;color:var(--text2);}
+.btn-prim{
+  width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:12px;
+  font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:6px;
+}
+.btn-prim:active{opacity:.88;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">🏠 코웨이 실적관리</div>
+      <div class="topbar-sub" id="tb-date"></div>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" onclick="saveToFile()">💾</button>
+      <button class="icon-btn" onclick="document.getElementById('fi-import').click()">📂</button>
+    </div>
+  </div>
+
+  <div class="pages">
+    <div class="page active" id="pg-dashboard"></div>
+    <div class="page" id="pg-weekly"></div>
+    <div class="page" id="pg-monthly"></div>
+    <div class="page" id="pg-members"></div>
+  </div>
+
+  <nav class="bottomnav">
+    <button class="nav-tab active" onclick="goPage('dashboard',this)"><span class="ni">📊</span><span>종합관리</span></button>
+    <button class="nav-tab" onclick="goPage('weekly',this)"><span class="ni">✏️</span><span>주간입력</span></button>
+    <button class="nav-tab" onclick="goPage('monthly',this)"><span class="ni">📆</span><span>월간리포트</span></button>
+    <button class="nav-tab" onclick="goPage('members',this)"><span class="ni">👥</span><span>팀원관리</span></button>
+  </nav>
+</div>
+
+<button class="fab" id="fab" onclick="openAddSheet()">＋</button>
+
+<div class="ov" id="ov" onclick="closeSheet()"></div>
+
+<div class="sheet" id="sh-add">
+  <div class="sh-handle"></div>
+  <div class="sh-title">새 팀원 추가</div>
+  <div class="sh-body">
+    <div style="margin-bottom:14px;">
+      <label class="fl">이름</label>
+      <input class="finput" id="inp-name" type="text" placeholder="팀원 이름" maxlength="10">
+    </div>
+    <div style="margin-bottom:4px;"><label class="fl">유형</label></div>
+    <div class="type-sel">
+      <div class="to sk" id="to-kodak" onclick="selType('kodak')">
+        <div class="to-icon">👨</div>
+        <div class="to-name" style="color:var(--kodak)">코닥</div>
+        <div class="to-desc">남성 팀원</div>
+      </div>
+      <div class="to" id="to-kodi" onclick="selType('kodi')">
+        <div class="to-icon">👩</div>
+        <div class="to-name" style="color:var(--kodi)">코디</div>
+        <div class="to-desc">여성 팀원</div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label class="fl">전화번호 (선택)</label>
+      <input class="finput" id="inp-phone" type="tel" placeholder="010-0000-0000" maxlength="13">
+    </div>
+    <button class="btn-prim" onclick="addMember()">추가하기</button>
+  </div>
+</div>
+
+<div class="sheet" id="sh-member">
+  <div class="sh-handle"></div>
+  <div class="sh-title" id="sh-member-title">팀원 정보 수정</div>
+  <div class="sh-body">
+    <div style="margin-bottom:14px;">
+      <label class="fl">이름</label>
+      <input class="finput" id="inp-member-name-edit" type="text" placeholder="팀원 이름" maxlength="10">
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label class="fl">전화번호</label>
+      <input class="finput" id="inp-member-phone-edit" type="tel" placeholder="010-0000-0000" maxlength="13">
+    </div>
+
+    <div style="margin-bottom:4px;">
+      <label class="fl">유형</label>
+    </div>
+
+    <div class="type-sel">
+      <div class="to" id="edit-to-kodak" onclick="selEditType('kodak')">
+        <div class="to-icon">👨</div>
+        <div class="to-name" style="color:var(--kodak)">코닥</div>
+        <div class="to-desc">남성 팀원</div>
+      </div>
+      <div class="to" id="edit-to-kodi" onclick="selEditType('kodi')">
+        <div class="to-icon">👩</div>
+        <div class="to-name" style="color:var(--kodi)">코디</div>
+        <div class="to-desc">여성 팀원</div>
+      </div>
+    </div>
+
+    <button class="btn-prim" onclick="saveMemberInfo()">저장</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="fi-import" accept=".json" style="display:none" onchange="loadFromFile(event)">
+
+<script>
+let S = {
+  members:[
+    {id:'m01',name:'김태양',type:'kodak',phone:''},
+    {id:'m02',name:'이수진',type:'kodi',phone:''},
+    {id:'m03',name:'박민준',type:'kodak',phone:''},
+    {id:'m04',name:'최유리',type:'kodi',phone:''},
+    {id:'m05',name:'정현우',type:'kodak',phone:''},
+    {id:'m06',name:'한소희',type:'kodi',phone:''},
+    {id:'m07',name:'윤대한',type:'kodak',phone:''},
+    {id:'m08',name:'임채원',type:'kodi',phone:''},
+  ],
+  records:{}
+};
+
+const today=new Date();
+let curPage='dashboard';
+let Y=today.getFullYear(), W=weekOfYear(today), Mo=today.getMonth()+1;
+let selMem=null, addType='kodak', editMemberId=null;
+let wView='input';
+let statItem='total';
+
+function save(){try{localStorage.setItem('coway5',JSON.stringify(S));}catch(e){}}
+function load(){try{const d=localStorage.getItem('coway5');if(d)S=JSON.parse(d);}catch(e){}}
+
+function weekOfYear(date){
+  const d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));
+  const dn=d.getUTCDay()||7;
+  d.setUTCDate(d.getUTCDate()+4-dn);
+  const y=new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  return Math.ceil((((d-y)/86400000)+1)/7);
+}
+function weekDates(year,week){
+  const j=new Date(year,0,4);
+  const start=new Date(j.setDate(j.getDate()-(j.getDay()||7)+1));
+  start.setDate(start.getDate()+(week-1)*7);
+  return Array.from({length:7},(_,i)=>{
+    const d=new Date(start);d.setDate(d.getDate()+i);return d;
+  });
+}
+const DAYS=['월','화','수','목','금','토','일'];
+function fmt(d){return `${d.getMonth()+1}/${d.getDate()}`;}
+function fullDate(d){return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;}
+function isToday(d){return fullDate(d)===fullDate(today);}
+
+function rk(y,w,mid){return `${y}-W${w}-${mid}`;}
+function getRec(y,w,mid){
+  return S.records[rk(y,w,mid)] || {
+    days:Array.from({length:7},()=>({신규:0,정수:0,전략:0}))
+  };
+}
+function setRec(y,w,mid,days){
+  S.records[rk(y,w,mid)]={days};
+  save();
+}
+function wSum(y,w,mid){
+  return getRec(y,w,mid).days.reduce((a,d)=>({
+    신규:a.신규+d.신규,
+    정수:a.정수+d.정수,
+    전략:a.전략+d.전략
+  }),{신규:0,정수:0,전략:0});
+}
+function mSum(y,mo,mid){
+  const t={신규:0,정수:0,전략:0};
+  for(let w=1;w<=53;w++){
+    const ds=weekDates(y,w);
+    if(!ds.some(d=>d.getFullYear()===y&&d.getMonth()+1===mo)){
+      if(ds[0].getFullYear()>y||(ds[0].getFullYear()===y&&ds[0].getMonth()+1>mo+1)) break;
+      continue;
+    }
+    getRec(y,w,mid).days.forEach((d,i)=>{
+      const dt=ds[i];
+      if(dt.getFullYear()===y&&dt.getMonth()+1===mo){
+        t.신규+=d.신규;t.정수+=d.정수;t.전략+=d.전략;
+      }
+    });
+  }
+  return t;
+}
+function twSum(y,w){
+  return S.members.reduce((a,m)=>{
+    const s=wSum(y,w,m.id);
+    return {신규:a.신규+s.신규,정수:a.정수+s.정수,전략:a.전략+s.전략};
+  },{신규:0,정수:0,전략:0});
+}
+function tmSum(y,mo){
+  return S.members.reduce((a,m)=>{
+    const s=mSum(y,mo,m.id);
+    return {신규:a.신규+s.신규,정수:a.정수+s.정수,전략:a.전략+s.전략};
+  },{신규:0,정수:0,전략:0});
+}
+
+function formatPhone(phone){
+  if(!phone) return '';
+  const num=String(phone).replace(/[^0-9]/g,'');
+  if(num.length===11) return num.replace(/(\d{3})(\d{4})(\d{4})/,'$1-$2-$3');
+  if(num.length===10) return num.replace(/(\d{3})(\d{3})(\d{4})/,'$1-$2-$3');
+  return phone;
+}
+function normalizePhoneInput(value){
+  const num=String(value||'').replace(/[^0-9]/g,'').slice(0,11);
+  if(num.length<4) return num;
+  if(num.length<8) return num.replace(/(\d{3})(\d+)/,'$1-$2');
+  return num.replace(/(\d{3})(\d{3,4})(\d+)/,'$1-$2-$3');
+}
+
+const renders={dashboard:renderDash,weekly:renderWeekly,monthly:renderMonthly,members:renderMembers};
+
+function goPage(page,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-'+page).classList.add('active');
+  btn.classList.add('active');
+  curPage=page;
+  document.getElementById('fab').style.display=page==='members'?'flex':'none';
+  renders[page]();
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function openSheet(id){
+  document.getElementById('ov').classList.add('show');
+  document.getElementById(id).classList.add('show');
+}
+function closeSheet(){
+  document.getElementById('ov').classList.remove('show');
+  ['sh-add','sh-member'].forEach(id=>document.getElementById(id).classList.remove('show'));
+}
+
+function selType(t){
+  addType=t;
+  document.getElementById('to-kodak').className='to'+(t==='kodak'?' sk':'');
+  document.getElementById('to-kodi').className='to'+(t==='kodi'?' si':'');
+}
+function openAddSheet(){
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-phone').value='';
+  selType('kodak');
+  openSheet('sh-add');
+}
+
+function selEditType(t){
+  const k=document.getElementById('edit-to-kodak');
+  const i=document.getElementById('edit-to-kodi');
+  if(!k||!i) return;
+  k.className='to'+(t==='kodak'?' sk':'');
+  i.className='to'+(t==='kodi'?' si':'');
+  const m=S.members.find(x=>x.id===editMemberId);
+  if(m) m._editType=t;
+}
+function openEditMember(id){
+  editMemberId=id;
+  const m=S.members.find(x=>x.id===id);
+  if(!m) return;
+  document.getElementById('sh-member-title').textContent=`${m.name} - 팀원 정보 수정`;
+  document.getElementById('inp-member-name-edit').value=m.name;
+  document.getElementById('inp-member-phone-edit').value=formatPhone(m.phone||'');
+  m._editType=m.type;
+  selEditType(m.type);
+  openSheet('sh-member');
+}
+function saveMemberInfo(){
+  if(!editMemberId) return;
+  const m=S.members.find(x=>x.id===editMemberId);
+  if(!m) return;
+
+  const newName=document.getElementById('inp-member-name-edit').value.trim();
+  if(!newName) return toast('이름을 입력해주세요');
+
+  m.name=newName;
+  m.type=m._editType||m.type;
+  m.phone=document.getElementById('inp-member-phone-edit').value.trim();
+  delete m._editType;
+
+  save();
+  closeSheet();
+
+  if(curPage==='members') renderMembers();
+  if(curPage==='weekly') renderWeekly();
+  if(curPage==='monthly') renderMonthly();
+  if(curPage==='dashboard') renderDash();
+
+  toast('팀원 정보가 수정되었습니다');
+}
+
+function renderDash(){
+  const el=document.getElementById('pg-dashboard');
+  const wds=weekDates(Y,W);
+  const wt=twSum(Y,W), mt=tmSum(Y,Mo);
+  const ranked=[...S.members].map(m=>{
+    const s=wSum(Y,W,m.id);
+    return {...m,...s,total:s.신규+s.정수+s.전략};
+  }).sort((a,b)=>b.total-a.total);
+  const mx=ranked[0]?.total||1;
+  const rc=['g','s','b'], re=['🥇','🥈','🥉'];
+
+  el.innerHTML=`
+  <div class="hero fi">
+    <div class="hero-label">${Y}년 제${W}주</div>
+    <div class="hero-week">${fmt(wds[0])} ~ ${fmt(wds[6])} 팀 실적</div>
+    <div class="hero-date">팀원 ${S.members.length}명</div>
+    <div class="hero-grid">
+      <div class="hero-stat"><div class="hero-stat-val">${wt.신규}</div><div class="hero-stat-lbl">신규건수</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">${wt.정수}</div><div class="hero-stat-lbl">정수건수</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">${wt.전략}</div><div class="hero-stat-lbl">전략건수</div></div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-top:10px;">
+    <div class="sec-title">이번 달 누적 (${Y}.${String(Mo).padStart(2,'0')})</div>
+    <div class="kpi-row">
+      <div class="kpi nw"><div class="kpi-v">${mt.신규}</div><div class="kpi-l">신규</div></div>
+      <div class="kpi gn"><div class="kpi-v">${mt.정수}</div><div class="kpi-l">정수</div></div>
+      <div class="kpi am"><div class="kpi-v">${mt.전략}</div><div class="kpi-l">전략</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">이번 주 팀원 순위</div>
+    <div class="card">
+      ${ranked.map((m,i)=>`
+        <div class="rank-row fi" style="animation-delay:${i*.05}s">
+          <div class="rnk ${rc[i]||'n'}">${i<3?re[i]:i+1}</div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:5px;">
+              <span style="font-weight:600;font-size:16px;">${m.name}</span>
+              <span class="chip ${m.type}">${m.type==='kodak'?'코닥':'코디'}</span>
+            </div>
+            <div class="bm">
+              <div class="bt"><div class="bf nw" style="width:${Math.round(m.신규/mx*100)}%"></div></div>
+              <div class="bt"><div class="bf gn" style="width:${Math.round(m.정수/mx*100)}%"></div></div>
+              <div class="bt"><div class="bf am" style="width:${Math.round(m.전략/mx*100)}%"></div></div>
+            </div>
+            <div style="font-size:13px;color:var(--text3);margin-top:2px;">신규 ${m.신규} · 정수 ${m.정수} · 전략 ${m.전략}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:16px;font-weight:800;color:var(--blue);">${m.total}</div>
+            <div style="font-size:10px;color:var(--text3);">합계</div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderWeekly(){
+  const el=document.getElementById('pg-weekly');
+  if(!selMem&&S.members.length>0) selMem=S.members[0].id;
+  const wds=weekDates(Y,W);
+  el.innerHTML=buildWeekNav(wds)+buildViewTabs()+(wView==='input'?buildInputView(wds):buildStatusView(wds));
+}
+function buildWeekNav(wds){
+  return `<div class="week-nav">
+    <button class="wn-btn" onclick="chgWeek(-1)">‹</button>
+    <div style="text-align:center;">
+      <div class="wn-title">${Y}년 제${W}주차</div>
+      <div class="wn-date">${fmt(wds[0])}(월) ~ ${fmt(wds[6])}(일)</div>
+    </div>
+    <button class="wn-btn" onclick="chgWeek(1)">›</button>
+  </div>`;
+}
+function buildViewTabs(){
+  return `<div class="view-tabs">
+    <div class="vt ${wView==='input'?'active':''}" onclick="setWView('input')">✏️ 개인입력</div>
+    <div class="vt ${wView==='status'?'active':''}" onclick="setWView('status')">📋 팀 현황표</div>
+  </div>`;
+}
+function setWView(v){wView=v;renderWeekly();}
+function chgWeek(d){
+  W+=d;
+  if(W<1){Y--;W=52;}
+  if(W>53){Y++;W=1;}
+  renderWeekly();
+}
+
+function buildInputView(wds){
+  if(!selMem) return '<div style="padding:24px;text-align:center;color:var(--text2);">팀원을 추가해 주세요</div>';
+
+  const rec=getRec(Y,W,selMem);
+  const sr=wSum(Y,W,selMem);
+  const sm=S.members.find(m=>m.id===selMem)||{};
+  const wt=twSum(Y,W);
+
+  return `
+  <div class="mem-scroll">
+    ${S.members.map(m=>`
+      <div class="mem-chip ${m.id===selMem?(m.type==='kodak'?'ak':'ai'):''}"
+           onclick="selMem='${m.id}';renderWeekly()">
+        ${m.name}
+      </div>`).join('')}
+  </div>
+
+  <div class="wsum">
+    <div class="ws tot"><div class="ws-v" id="ws-tot">${sr.신규+sr.정수+sr.전략}</div><div class="ws-l">${sm.name} 합계</div></div>
+    <div class="ws nw"><div class="ws-v" id="ws-nw">${sr.신규}</div><div class="ws-l">신규</div></div>
+    <div class="ws gn"><div class="ws-v" id="ws-gn">${sr.정수}</div><div class="ws-l">정수</div></div>
+    <div class="ws am"><div class="ws-v" id="ws-am">${sr.전략}</div><div class="ws-l">전략</div></div>
+  </div>
+
+  <div class="section" style="padding-top:6px;">
+    <div class="card" style="padding:10px 10px 6px;">
+      <div style="
+        display:grid;
+        grid-template-columns:52px 1fr 1fr 1fr 44px;
+        align-items:center;
+        padding:4px 6px 8px;
+        font-size:13px;
+        font-weight:800;
+        color:var(--text2);
+        border-bottom:1px solid var(--bd);
+      ">
+        <div>요일</div>
+        <div style="text-align:center;color:var(--blue);">신규</div>
+        <div style="text-align:center;color:var(--green);">정수</div>
+        <div style="text-align:center;color:var(--amber);">전략</div>
+        <div style="text-align:right;color:var(--blue);">합계</div>
+      </div>
+
+      ${wds.map((date,i)=>{
+        const d=rec.days[i];
+        const dt=d.신규+d.정수+d.전략;
+        const isTdy=isToday(date);
+        const isWk=i>=5;
+        return `
+        <div style="
+          display:grid;
+          grid-template-columns:52px 1fr 1fr 1fr 44px;
+          align-items:center;
+          padding:6px;
+          column-gap:4px;
+          border-bottom:${i<6?'1px solid var(--bd)':'none'};
+          ${isTdy?'background:#F0F6FF;border-radius:8px;':''}
+        ">
+          <div style="display:flex;flex-direction:column;gap:0;">
+            <span style="font-size:13px;font-weight:800;${isWk?'color:#C62828;':''}">${DAYS[i]}</span>
+            <span style="font-size:10px;color:var(--text2);">${fmt(date)}</span>
+          </div>
+
+          <div class="num-wrap">
+            <input type="number" min="0" class="num-input nw" id="nd-${i}-신규"
+              value="${d.신규}" oninput="setDayValue('${selMem}',${i},'신규',this.value)">
+          </div>
+
+          <div class="num-wrap">
+            <input type="number" min="0" class="num-input gn" id="nd-${i}-정수"
+              value="${d.정수}" oninput="setDayValue('${selMem}',${i},'정수',this.value)">
+          </div>
+
+          <div class="num-wrap">
+            <input type="number" min="0" class="num-input am" id="nd-${i}-전략"
+              value="${d.전략}" oninput="setDayValue('${selMem}',${i},'전략',this.value)">
+          </div>
+
+          <div id="dct-${i}" style="text-align:right;font-size:16px;font-weight:800;color:var(--blue);">${dt}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <div class="section" style="padding-top:6px;padding-bottom:14px;">
+    <div class="sec-title">팀 전체 주간 합계</div>
+    <div class="kpi-row">
+      <div class="kpi nw"><div class="kpi-v" style="font-size:24px;">${wt.신규}</div><div class="kpi-l">신규</div></div>
+      <div class="kpi gn"><div class="kpi-v" style="font-size:24px;">${wt.정수}</div><div class="kpi-l">정수</div></div>
+      <div class="kpi am"><div class="kpi-v" style="font-size:24px;">${wt.전략}</div><div class="kpi-l">전략</div></div>
+    </div>
+  </div>`;
+}
+
+function setDayValue(mid,di,type,value){
+  const rec=getRec(Y,W,mid);
+  const num=Math.max(0,parseInt(value||0,10)||0);
+  rec.days[di][type]=num;
+  setRec(Y,W,mid,rec.days);
+
+  const dct=document.getElementById(`dct-${di}`);
+  if(dct){
+    const d=rec.days[di];
+    dct.textContent=d.신규+d.정수+d.전략;
+  }
+
+  const ws=wSum(Y,W,mid);
+  const totEl=document.getElementById('ws-tot'); if(totEl) totEl.textContent=ws.신규+ws.정수+ws.전략;
+  const nwEl=document.getElementById('ws-nw'); if(nwEl) nwEl.textContent=ws.신규;
+  const gnEl=document.getElementById('ws-gn'); if(gnEl) gnEl.textContent=ws.정수;
+  const amEl=document.getElementById('ws-am'); if(amEl) amEl.textContent=ws.전략;
+}
+
+function buildStatusView(wds){
+  const todayIdx=wds.findIndex(d=>isToday(d));
+  const rows=S.members.map(m=>({...m,days:getRec(Y,W,m.id).days}));
+  const teamDays=Array.from({length:7},(_,i)=>({
+    신규:rows.reduce((s,r)=>s+r.days[i].신규,0),
+    정수:rows.reduce((s,r)=>s+r.days[i].정수,0),
+    전략:rows.reduce((s,r)=>s+r.days[i].전략,0),
+  }));
+
+  function getVal(days,i){
+    if(statItem==='total') return days[i].신규+days[i].정수+days[i].전략;
+    return days[i][statItem];
+  }
+  function getRowSum(days){
+    if(statItem==='total') return days.reduce((s,d)=>s+d.신규+d.정수+d.전략,0);
+    return days.reduce((s,d)=>s+d[statItem],0);
+  }
+
+  const colorMap={total:'var(--blue)','신규':'var(--blue)','정수':'var(--green)','전략':'var(--amber)'};
+  const lc=colorMap[statItem];
+
+  const segBtns=[
+    {k:'total',lbl:'전체',ci:'c0'},
+    {k:'신규',lbl:'신규',ci:'c1'},
+    {k:'정수',lbl:'정수',ci:'c2'},
+    {k:'전략',lbl:'전략',ci:'c3'},
+  ];
+
+  const segHTML=`<div class="seg">
+    ${segBtns.map(b=>`<button class="sb${statItem===b.k?' on '+b.ci:''}" onclick="statItem='${b.k}';renderWeekly()">${b.lbl}</button>`).join('')}
+  </div>`;
+
+  const thead=`<thead><tr>
+    <th class="cn">이름</th>
+    ${wds.map((d,i)=>{
+      const isTdy=i===todayIdx, isWk=i>=5;
+      return `<th class="cd${isTdy?' tdy':''}${isWk?' wkd':''}">${DAYS[i]}<br><span style="font-size:9px;font-weight:400;">${fmt(d)}</span></th>`;
+    }).join('')}
+    <th class="cs">합계</th>
+  </tr></thead>`;
+
+  const tbody=rows.map((m,ri)=>{
+    const sum=getRowSum(m.days);
+    return `<tr class="fi" style="animation-delay:${ri*.04}s">
+      <td class="cn">
+        <div style="font-size:12px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px;">${m.name}</div>
+        <span class="chip ${m.type}" style="font-size:9px;">${m.type==='kodak'?'코닥':'코디'}</span>
+      </td>
+      ${m.days.map((day,i)=>{
+        const v=getVal(m.days,i);
+        const isTdy=i===todayIdx;
+        return `<td class="dcel${v===0?' zero':''}${isTdy?' tdy':''}" style="${v>0?`color:${lc};`:''}">${v===0?'·':v}</td>`;
+      }).join('')}
+      <td class="cs" style="color:${lc};">${sum}</td>
+    </tr>`;
+  }).join('');
+
+  const teamSum=getRowSum(teamDays);
+  const teamRow=`<tr class="tr-team">
+    <td class="cn" style="font-size:11px;font-weight:700;">팀 합계</td>
+    ${teamDays.map((day,i)=>{
+      const v=getVal(teamDays,i);
+      const isTdy=i===todayIdx;
+      return `<td class="dcel${isTdy?' tdy':''}" style="color:${lc};font-weight:800;">${v===0?'·':v}</td>`;
+    }).join('')}
+    <td class="cs" style="color:${lc};font-size:14px;">${teamSum}</td>
+  </tr>`;
+
+  const wt=twSum(Y,W);
+  return `<div class="status-wrap">
+    ${segHTML}
+    <div class="tbl-wrap">
+      <table class="stbl">${thead}<tbody>${tbody}${teamRow}</tbody></table>
+    </div>
+  </div>
+  <div class="section" style="padding-bottom:16px;">
+    <div class="sec-title">팀 전체 주간 합계</div>
+    <div class="kpi-row">
+      <div class="kpi nw"><div class="kpi-v">${wt.신규}</div><div class="kpi-l">신규</div></div>
+      <div class="kpi gn"><div class="kpi-v">${wt.정수}</div><div class="kpi-l">정수</div></div>
+      <div class="kpi am"><div class="kpi-v">${wt.전략}</div><div class="kpi-l">전략</div></div>
+    </div>
+  </div>`;
+}
+
+function renderMonthly(){
+  const el=document.getElementById('pg-monthly');
+  const mt=tmSum(Y,Mo);
+  const rows=S.members.map(m=>{
+    const s=mSum(Y,Mo,m.id);
+    return {...m,...s,total:s.신규+s.정수+s.전략};
+  });
+  const sorted=[...rows].sort((a,b)=>b.total-a.total);
+  const mx=sorted[0]?.total||1;
+
+  el.innerHTML=`
+  <div class="month-nav">
+    <button class="mn-btn" onclick="chgMonth(-1)">‹</button>
+    <div class="mn-title">${Y}년 ${Mo}월</div>
+    <button class="mn-btn" onclick="chgMonth(1)">›</button>
+  </div>
+
+  <div class="mkpi">
+    <div class="mkpi-c nw"><div class="mkpi-v">${mt.신규}</div><div class="mkpi-l">신규건수</div></div>
+    <div class="mkpi-c gn"><div class="mkpi-v">${mt.정수}</div><div class="mkpi-l">정수건수</div></div>
+    <div class="mkpi-c am"><div class="mkpi-v">${mt.전략}</div><div class="mkpi-l">전략건수</div></div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">팀원별 월간 실적</div>
+    <div class="card">
+      <div class="mtbl-wrap">
+        <table class="mtbl">
+          <thead><tr>
+            <th style="text-align:left;padding-left:12px;">이름</th>
+            <th>신규</th><th>정수</th><th>전략</th><th>합계</th>
+          </tr></thead>
+          <tbody>
+            ${rows.map(r=>`<tr>
+              <td class="ncl">${r.name}<span class="chip ${r.type}" style="margin-left:4px;">${r.type==='kodak'?'코닥':'코디'}</span></td>
+              <td style="color:var(--blue);font-weight:500;">${r.신규}</td>
+              <td style="color:var(--green);font-weight:500;">${r.정수}</td>
+              <td style="color:var(--amber);font-weight:500;">${r.전략}</td>
+              <td style="font-weight:600;">${r.total}</td>
+            </tr>`).join('')}
+            <tr class="totrow">
+              <td class="ncl">팀 합계</td>
+              <td>${mt.신규}</td><td>${mt.정수}</td><td>${mt.전략}</td>
+              <td>${mt.신규+mt.정수+mt.전략}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-bottom:20px;">
+    <div class="sec-title">팀원별 합계 비교</div>
+    <div class="card">
+      <div style="padding:14px;">
+        ${sorted.map(r=>`
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;">
+            <div style="width:50px;font-size:11px;font-weight:700;text-align:right;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.name}</div>
+            <div style="flex:1;background:var(--bd);border-radius:6px;height:22px;overflow:hidden;">
+              <div style="width:${Math.round(r.total/mx*100)}%;height:100%;background:var(--blue);border-radius:6px;display:flex;align-items:center;padding-left:7px;min-width:2px;">
+                ${r.total>0?`<span style="font-size:11px;font-weight:800;color:#fff;">${r.total}</span>`:''}
+              </div>
+            </div>
+            ${r.total===0?`<span style="font-size:11px;color:var(--text3);">0</span>`:''}
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+function chgMonth(d){
+  Mo+=d;
+  if(Mo<1){Y--;Mo=12;}
+  if(Mo>12){Y++;Mo=1;}
+  renderMonthly();
+}
+
+function renderMembers(){
+  const el=document.getElementById('pg-members');
+  el.innerHTML=`
+  <div class="section" style="padding-top:10px;">
+    <div class="sec-title">팀원 목록 (${S.members.length}명)</div>
+    <div>
+      ${S.members.map((m,i)=>{
+        const hasPhone=!!(m.phone&&m.phone.trim());
+        const phoneText=hasPhone?formatPhone(m.phone):'전화번호 없음';
+        const phoneRaw=hasPhone?(m.phone.replace(/-/g,'')):'';
+        return `
+        <div class="mem-item fi" style="animation-delay:${i*.04}s;">
+          <div class="mem-top">
+            <div class="mem-info">
+              <div class="mem-name">
+                ${m.name}
+                <span class="mem-sub">${m.type==='kodak'?'코닥 (남)':'코디 (여)'}</span>
+              </div>
+            </div>
+            <button class="edit-btn" onclick="openEditMember('${m.id}')" title="팀원 정보 수정">✏️</button>
+            <button class="del-btn" onclick="delMember('${m.id}')">🗑</button>
+          </div>
+          <div class="phone-row">
+            <span class="phone-num${hasPhone?'':' empty'}">${phoneText}</span>
+            ${hasPhone
+              ?`<a class="call-btn" href="tel:${phoneRaw}">📞 전화걸기</a>`
+              :`<span class="call-btn disabled">📞 전화걸기</span>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <div class="section" style="padding-bottom:20px;">
+    <div style="padding:12px;background:var(--sky);border-radius:12px;font-size:12px;color:var(--blue);font-weight:600;">
+      💡 팀원은 최대 20명까지 등록 가능합니다. 현재 ${S.members.length}명 / 20명
+    </div>
+  </div>`;
+
+  document.getElementById('fab').style.display='flex';
+}
+
+function addMember(){
+  const name=document.getElementById('inp-name').value.trim();
+  if(!name) return toast('이름을 입력해주세요');
+  if(S.members.length>=20) return toast('최대 20명까지 등록 가능합니다');
+  const phone=document.getElementById('inp-phone').value.trim();
+  S.members.push({id:'m'+Date.now(),name,type:addType,phone});
+  save();closeSheet();renderMembers();
+  toast(`${name} 팀원이 추가되었습니다`);
+}
+function delMember(id){
+  const m=S.members.find(x=>x.id===id);
+  if(!m) return;
+  if(!confirm(`"${m.name}" 팀원을 삭제하시겠습니까?\n실적 데이터도 함께 삭제됩니다.`)) return;
+  S.members=S.members.filter(x=>x.id!==id);
+  Object.keys(S.records).forEach(k=>{if(k.includes(id)) delete S.records[k];});
+  save();
+  if(selMem===id) selMem=S.members[0]?.id||null;
+  renderMembers();
+  toast(`${m.name} 팀원이 삭제되었습니다`);
+}
+
+function saveToFile(){
+  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const u=URL.createObjectURL(b);
+  const a=document.createElement('a');
+  a.href=u;
+  a.download=`coway_${Y}${String(Mo).padStart(2,'0')}.json`;
+  a.click();
+  URL.revokeObjectURL(u);
+  toast('데이터를 저장했습니다');
+}
+function loadFromFile(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      S=JSON.parse(ev.target.result);
+      S.members=S.members.map(m=>({phone:'',...m}));
+      save();
+      renders[curPage]();
+      toast('데이터를 불러왔습니다');
+    }catch{
+      toast('파일 형식이 올바르지 않습니다');
+    }
+  };
+  r.readAsText(file);
+  e.target.value='';
+}
+
+function bindPhoneInputs(){
+  const addInput=document.getElementById('inp-phone');
+  const editInput=document.getElementById('inp-member-phone-edit');
+  if(addInput){
+    addInput.addEventListener('input',e=>{
+      e.target.value=normalizePhoneInput(e.target.value);
+      e.target.setSelectionRange(e.target.value.length,e.target.value.length);
+    });
+  }
+  if(editInput){
+    editInput.addEventListener('input',e=>{
+      e.target.value=normalizePhoneInput(e.target.value);
+      e.target.setSelectionRange(e.target.value.length,e.target.value.length);
+    });
+  }
+}
+
+function init(){
+  load();
+  S.members=S.members.map(m=>({phone:'',...m}));
+  const d=today;
+  document.getElementById('tb-date').textContent=
+    `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${['일','월','화','수','목','금','토'][d.getDay()]})`;
+  bindPhoneInputs();
+  renderDash();
+}
+init();
+</script>
+</body>
+</html>
