@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'finance_models.dart';
 
-// ============================================================
-// finance_transaction_dialog.dart — 수입/지출 항목 추가/수정 다이얼로그
-// ============================================================
-
 class TransactionDialog extends StatefulWidget {
-  final Transaction? tx; // null이면 추가, 있으면 수정
+  final Transaction? tx;
   final void Function(Transaction) onSave;
   final void Function(String msg) onSnack;
+  final String? initialTitle;
+  final int? initialAmount;
 
   const TransactionDialog({
     super.key,
     this.tx,
     required this.onSave,
     required this.onSnack,
+    this.initialTitle,
+    this.initialAmount,
   });
 
   @override
@@ -34,17 +34,27 @@ class _TransactionDialogState extends State<TransactionDialog> {
   void initState() {
     super.initState();
     final tx = widget.tx;
-    _type = tx?.type ?? TransactionType.income;
-    _titleCtrl = TextEditingController(text: tx?.title ?? '');
+    _type =
+        tx?.type ??
+        (widget.initialAmount != null
+            ? TransactionType.expense
+            : TransactionType.income);
+    _titleCtrl = TextEditingController(
+      text: tx?.title ?? widget.initialTitle ?? '',
+    );
     _amountCtrl = TextEditingController(
       text: tx != null && tx.amount > 0
           ? tx.amount.toString().replaceAllMapped(
               RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
               (m) => '${m[1]},',
             )
-          : '',
+          : (widget.initialAmount != null
+                ? widget.initialAmount.toString().replaceAllMapped(
+                    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                    (m) => '${m[1]},',
+                  )
+                : ''),
     );
-    // 내부 식별키는 메모에 표시 안 함
     final rawMemo = tx?.memo ?? '';
     _memoCtrl = TextEditingController(
       text: rawMemo.startsWith('회비_') || rawMemo.startsWith('회비반환_')
@@ -93,7 +103,6 @@ class _TransactionDialogState extends State<TransactionDialog> {
       tx.title = title;
       tx.amount = amount;
       tx.date = _date;
-      // 내부 식별키는 유지
       final rawMemo = tx.memo;
       tx.memo = (rawMemo.startsWith('회비_') || rawMemo.startsWith('회비반환_'))
           ? rawMemo
@@ -116,9 +125,9 @@ class _TransactionDialogState extends State<TransactionDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: const Color(0xFFF4F5FA),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: Colors.white,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -126,19 +135,17 @@ class _TransactionDialogState extends State<TransactionDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 제목
             Text(
               _isEdit ? '항목 수정' : '항목 추가',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 17,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF111111),
               ),
             ),
             const SizedBox(height: 12),
 
-            // 수입 / 지출 선택
             Row(
               children: [
                 Expanded(
@@ -160,7 +167,6 @@ class _TransactionDialogState extends State<TransactionDialog> {
             ),
             const SizedBox(height: 10),
 
-            // 항목명
             DlgField(
               label: '항목명',
               child: TextField(
@@ -174,14 +180,12 @@ class _TransactionDialogState extends State<TransactionDialog> {
             ),
             const SizedBox(height: 8),
 
-            // 금액
             DlgField(
               label: '금액 (원)',
               child: AmountTextField(controller: _amountCtrl, hint: '입력'),
             ),
             const SizedBox(height: 8),
 
-            // 날짜
             DlgField(
               label: '날짜',
               child: GestureDetector(
@@ -230,7 +234,6 @@ class _TransactionDialogState extends State<TransactionDialog> {
             ),
             const SizedBox(height: 8),
 
-            // 메모
             DlgField(
               label: '메모',
               child: TextField(
@@ -241,7 +244,6 @@ class _TransactionDialogState extends State<TransactionDialog> {
             ),
             const SizedBox(height: 14),
 
-            // 버튼
             Row(
               children: [
                 Expanded(

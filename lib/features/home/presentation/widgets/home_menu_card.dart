@@ -5,6 +5,9 @@ class HomeMenuCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final Color iconColor;
+  final Color iconBgColor;
+  final Color subtitleColor;
 
   const HomeMenuCard({
     super.key,
@@ -12,89 +15,75 @@ class HomeMenuCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.iconColor = const Color(0xFF2563EB),
+    this.iconBgColor = const Color(0xFFDCEBFF),
+    this.subtitleColor = const Color(0xFF2563EB),
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(26),
+      borderRadius: BorderRadius.circular(20),
       child: InkWell(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(26),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x11000000),
+                color: Color(0x10000000),
                 blurRadius: 10,
-                offset: Offset(0, 4),
+                offset: Offset(0, 3),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 아이콘 박스 (작게)
               Container(
-                width: 74,
-                height: 74,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFDCEBFF), // primaryLight2 대체
-                  borderRadius: BorderRadius.circular(22),
+                  color: iconBgColor,
+                  borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(
-                  icon,
-                  size: 38,
-                  color: const Color(0xFF1246C8), // primary 대체
+                child: Icon(icon, size: 22, color: iconColor),
+              ),
+              const SizedBox(height: 14),
+              // 제목
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF1A1A1A),
+                    height: 1.1,
+                    letterSpacing: -0.5,
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1E5DB8),
-                  height: 1.1,
-                  letterSpacing: -0.4,
-                ),
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 5),
+              // 서브 (작게)
               Text(
                 subtitle,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF111111),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: subtitleColor,
                   height: 1.3,
-                  letterSpacing: -0.1,
+                  letterSpacing: -0.2,
                 ),
-              ),
-              const Spacer(),
-              const Row(
-                children: [
-                  Text(
-                    '바로가기',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1246C8),
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                  SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 18,
-                    color: Color(0xFF1246C8), // primary 대체
-                  ),
-                ],
               ),
             ],
           ),

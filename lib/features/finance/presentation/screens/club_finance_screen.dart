@@ -8,10 +8,6 @@ import 'finance_summary_tab.dart';
 import 'finance_dues_dialog.dart';
 import 'finance_transaction_dialog.dart';
 
-// ============================================================
-// club_finance_screen.dart — 메인 화면 (탭 구성 + 데이터 관리)
-// ============================================================
-
 class ClubFinanceScreen extends StatefulWidget {
   const ClubFinanceScreen({super.key});
 
@@ -39,7 +35,6 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
   DateTime _rangeStart = DateTime(DateTime.now().year, 1, 1);
   DateTime _rangeEnd = DateTime.now();
 
-  // ── 초기화 ───────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
@@ -54,7 +49,6 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
     super.dispose();
   }
 
-  // ── 데이터 로드 ──────────────────────────────────────────
   Future<void> _loadAll() async {
     final members = await MemberStorage.loadMembers();
     final savedDues = await FinanceStorage.loadDues();
@@ -64,6 +58,7 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
     final stuDiscAmt = await FinanceStorage.loadStudentDiscountAmt();
     final discAge = await FinanceStorage.loadDiscountAge();
 
+    if (!mounted) return;
     setState(() {
       _dues = _syncDues(members ?? [], savedDues);
       _transactions = savedTx;
@@ -88,7 +83,6 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
     }).toList()..sort((a, b) => a.memberName.compareTo(b.memberName));
   }
 
-  // ── 필터 ────────────────────────────────────────────────
   List<DuesRecord> get _filteredDues {
     final kw = _searchCtrl.text.trim();
     return _dues.where((r) {
@@ -101,7 +95,6 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
     }).toList();
   }
 
-  // ── 계산 ────────────────────────────────────────────────
   int _expectedAmount(DuesRecord r) {
     switch (r.discountType) {
       case 'age':
@@ -123,7 +116,6 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
       .where((r) => !r.isPaid)
       .fold(0, (int s, r) => s + _expectedAmount(r));
 
-  // ── 저장 ────────────────────────────────────────────────
   Future<void> _saveDues() => FinanceStorage.saveDues(_dues);
   Future<void> _saveTx() => FinanceStorage.saveTx(_transactions);
 
@@ -133,7 +125,6 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
       ..showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  // ── 할인 설정 저장 ───────────────────────────────────────
   Future<void> _applyDefaultAmt(int v) async {
     setState(() {
       _defaultDuesAmount = v;
@@ -164,8 +155,9 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
     setState(() {
       _studentDiscountAmount = amount;
       for (final r in _dues) {
-        if (r.isPaid && r.discountType == 'student')
+        if (r.isPaid && r.discountType == 'student') {
           r.amount = _expectedAmount(r);
+        }
       }
     });
     await FinanceStorage.saveStudentDiscountAmt(amount);
@@ -173,7 +165,6 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
     _snack('학생 할인 설정이 저장되었습니다.');
   }
 
-  // ── 다이얼로그 열기 ──────────────────────────────────────
   void _showDuesDialog(DuesRecord record) {
     showDialog(
       context: context,
@@ -218,14 +209,11 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
     );
   }
 
-  // ── 삭제 처리 ────────────────────────────────────────────
   void _onDeleteTransaction(Transaction tx) {
-    // 회비 수입 항목 삭제 → [반환] 기록 추가 + 회비납부 탭 자동 미납
     if (tx.memo.startsWith('회비_')) {
       final memberId = tx.memo.replaceFirst('회비_', '');
       setState(() {
         _transactions.removeWhere((t) => t.id == tx.id);
-
         final alreadyCancelled = _transactions.any(
           (t) => t.memo == '회비반환_$memberId',
         );
@@ -240,7 +228,6 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
             ),
           );
         }
-
         final due = _dues.firstWhere(
           (d) => d.memberId == memberId,
           orElse: () => DuesRecord(memberId: '', memberName: ''),
@@ -255,14 +242,11 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
       _snack('반환 처리되었습니다.');
       return;
     }
-
-    // 일반 항목 삭제
     setState(() => _transactions.removeWhere((t) => t.id == tx.id));
     _saveTx();
     _snack('삭제되었습니다.');
   }
 
-  // ── 빌드 ────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -279,6 +263,8 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
         surfaceTintColor: const Color(0xFFF6F7FA),
         elevation: 0,
         scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleSpacing: -4,
         leadingWidth: 34,
         leading: IconButton(
           padding: EdgeInsets.zero,
@@ -293,7 +279,7 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
         title: const Text(
           '클럽 재정관리',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 19,
             fontWeight: FontWeight.w700,
             color: Color(0xFF111111),
           ),
@@ -311,11 +297,11 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
         bottom: TabBar(
           controller: _tabController,
           labelStyle: const TextStyle(
-            fontSize: 14,
+            fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
           unselectedLabelStyle: const TextStyle(
-            fontSize: 14,
+            fontSize: 16,
             fontWeight: FontWeight.w400,
           ),
           labelColor: const Color(0xFF5B8ABB),
@@ -332,7 +318,6 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          // ① 회비납부 탭
           DuesTab(
             dues: _dues,
             filteredDues: _filteredDues,
@@ -356,16 +341,12 @@ class _ClubFinanceScreenState extends State<ClubFinanceScreen>
               _saveDues();
             },
           ),
-
-          // ② 수입/지출 탭
           TransactionTab(
             transactions: _transactions,
             onAddTap: () => _showTransactionDialog(),
             onEditTap: (tx) => _showTransactionDialog(tx: tx),
             onDelete: _onDeleteTransaction,
           ),
-
-          // ③ 요약 탭
           SummaryTab(
             transactions: _transactions,
             summaryPeriod: _summaryPeriod,

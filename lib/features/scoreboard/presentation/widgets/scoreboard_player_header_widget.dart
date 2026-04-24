@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// 선수명 헤더 — height를 고정하지 않고 화면 비율로 결정합니다.
 class ScoreboardPlayerHeaderWidget extends StatelessWidget {
   final String player1;
   final String player2;
@@ -19,32 +18,36 @@ class ScoreboardPlayerHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double sh = MediaQuery.of(context).size.height;
-    final double headerH = (sh * 0.08).clamp(36.0, 56.0);
+    // MediaQuery 대신 LayoutBuilder로 부모 크기 기준 → 여백 오차 없음
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double headerH = (constraints.maxWidth * 0.11).clamp(36.0, 56.0);
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: onEditTeam,
-      child: Container(
-        height: headerH,
-        decoration: BoxDecoration(
-          color: const Color(0xFF5F5F5F),
+        return InkWell(
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.22),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+          onTap: onEditTeam,
+          child: Container(
+            height: headerH,
+            decoration: BoxDecoration(
+              color: const Color(0xFF5F5F5F),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.22),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(child: _playerLabel(player1, player1Serving)),
-            Expanded(child: _playerLabel(player2, player2Serving)),
-          ],
-        ),
-      ),
+            child: Row(
+              children: [
+                Expanded(child: _playerLabel(player1, player1Serving)),
+                Expanded(child: _playerLabel(player2, player2Serving)),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

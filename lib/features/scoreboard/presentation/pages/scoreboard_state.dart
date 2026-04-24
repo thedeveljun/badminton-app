@@ -12,11 +12,9 @@ import 'package:funminton_club_app/features/scoreboard/presentation/pages/scoreb
 import 'package:funminton_club_app/features/scoreboard/presentation/pages/scoreboard_bulk_player_edit_page.dart';
 
 /// 게임 상태 + 로직 (추상 클래스)
-/// ScoreboardPage 의 _ScoreboardPageState 가 이를 extends 합니다.
 abstract class ScoreboardStateBase<T extends StatefulWidget> extends State<T> {
   static const String savedMatchesKey = 'saved_matches_v1';
 
-  // ── 상태 변수 ─────────────────────────────────────────────────
   List<ScoreboardSavedMatchRecord> savedMatches = [];
 
   // ── TTS ──────────────────────────────────────────────────────
@@ -24,14 +22,20 @@ abstract class ScoreboardStateBase<T extends StatefulWidget> extends State<T> {
   bool _ttsEnabled = true;
 
   Future<void> initTts() async {
-    await _tts.setLanguage('ko-KR');
-    await _tts.setSpeechRate(0.9);
-    await _tts.setVolume(1.0);
-    await _tts.setPitch(1.0);
+    try {
+      await _tts.setLanguage('ko-KR');
+      await _tts.setSpeechRate(0.9);
+      await _tts.setVolume(1.0);
+      await _tts.setPitch(1.0);
+    } catch (_) {
+      // TTS 초기화 실패 시에도 앱이 죽지 않도록
+    }
   }
 
   Future<void> disposeTts() async {
-    await _tts.stop();
+    try {
+      await _tts.stop();
+    } catch (_) {}
   }
 
   void toggleTts() {
@@ -41,43 +45,11 @@ abstract class ScoreboardStateBase<T extends StatefulWidget> extends State<T> {
 
   bool get ttsEnabled => _ttsEnabled;
 
-  Future<void> _speak(String text) async {
+  void _speak(String text) {
     if (!_ttsEnabled) return;
-    await _tts.stop();
-    await _tts.speak(text);
-  }
-
-  // 점수 상황에 따라 읽을 텍스트 결정
-  String _buildScoreAnnouncement() {
-    final a = scoreA;
-    final b = scoreB;
-
-    // 게임 종료
-    if (isGameFinished()) {
-      return '게임! $a 대 $b';
-    }
-
-    // 듀스 상황 (둘 다 targetScore-1 이상이고 동점)
-    if (useDeuce && a == b && a >= targetScore - 1) {
-      return '듀스';
-    }
-
-    // 게임포인트: 한쪽이 targetScore-1점이고 상대보다 앞설 때
-    final isGamePoint =
-        (a == targetScore - 1 && a > b) || (b == targetScore - 1 && b > a);
-    if (isGamePoint) {
-      return '게임포인트! $a 대 $b';
-    }
-
-    // 듀스 게임포인트 (듀스 후 1점 차)
-    if (useDeuce &&
-        (a >= targetScore || b >= targetScore) &&
-        (a - b).abs() == 1) {
-      return '게임포인트! $a 대 $b';
-    }
-
-    // 일반 점수
-    return '$a 대 $b';
+    try {
+      _tts.speak(text);
+    } catch (_) {}
   }
 
   int scoreA = 0;
@@ -107,20 +79,20 @@ abstract class ScoreboardStateBase<T extends StatefulWidget> extends State<T> {
   // ── 서브 상태 getters ─────────────────────────────────────────
   bool get isLeftPlayer1Serving =>
       leftHasServed &&
-      servingSide == ServeSide.left &&
-      leftCurrentServerIndex == 0;
+          servingSide == ServeSide.left &&
+          leftCurrentServerIndex == 0;
   bool get isLeftPlayer2Serving =>
       leftHasServed &&
-      servingSide == ServeSide.left &&
-      leftCurrentServerIndex == 1;
+          servingSide == ServeSide.left &&
+          leftCurrentServerIndex == 1;
   bool get isRightPlayer1Serving =>
       rightHasServed &&
-      servingSide == ServeSide.right &&
-      rightCurrentServerIndex == 0;
+          servingSide == ServeSide.right &&
+          rightCurrentServerIndex == 0;
   bool get isRightPlayer2Serving =>
       rightHasServed &&
-      servingSide == ServeSide.right &&
-      rightCurrentServerIndex == 1;
+          servingSide == ServeSide.right &&
+          rightCurrentServerIndex == 1;
 
   // ── 선수 helpers ──────────────────────────────────────────────
   List<String> get allPlayers => [
@@ -136,7 +108,6 @@ abstract class ScoreboardStateBase<T extends StatefulWidget> extends State<T> {
   List<int> opponentCandidatesOf(int firstServerGlobalIndex) =>
       isLeftTeamGlobalIndex(firstServerGlobalIndex) ? [2, 3] : [0, 1];
 
-  // ── 저장 helpers ──────────────────────────────────────────────
   bool _isPlaceholderLabel(String v) =>
       {'선수1', '선수2', '선수3', '선수4'}.contains(v.trim());
   String _normalizeName(String v) {
@@ -156,33 +127,26 @@ abstract class ScoreboardStateBase<T extends StatefulWidget> extends State<T> {
   String get deuceLabel => useDeuce ? '듀스 ON' : '듀스 OFF';
 
   bool isSameRecordIgnoringTime(
-    ScoreboardSavedMatchRecord a,
-    ScoreboardSavedMatchRecord b,
-  ) =>
+      ScoreboardSavedMatchRecord a,
+      ScoreboardSavedMatchRecord b,
+      ) =>
       a.leftPlayer1 == b.leftPlayer1 &&
-      a.leftPlayer2 == b.leftPlayer2 &&
-      a.rightPlayer1 == b.rightPlayer1 &&
-      a.rightPlayer2 == b.rightPlayer2 &&
-      a.scoreA == b.scoreA &&
-      a.scoreB == b.scoreB &&
-      a.targetScore == b.targetScore &&
-      a.useDeuce == b.useDeuce;
+          a.leftPlayer2 == b.leftPlayer2 &&
+          a.rightPlayer1 == b.rightPlayer1 &&
+          a.rightPlayer2 == b.rightPlayer2 &&
+          a.scoreA == b.scoreA &&
+          a.scoreB == b.scoreB &&
+          a.targetScore == b.targetScore &&
+          a.useDeuce == b.useDeuce;
 
   // ── Lifecycle ─────────────────────────────────────────────────
-  void initScoreboard() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    loadSavedMatches();
-  }
+  void initScoreboard() {}
 
   void disposeScoreboard() {
+    disposeTts();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
     ]);
   }
 
@@ -193,9 +157,9 @@ abstract class ScoreboardStateBase<T extends StatefulWidget> extends State<T> {
     final loaded = rawList
         .map(
           (e) => ScoreboardSavedMatchRecord.fromMap(
-            jsonDecode(e) as Map<String, dynamic>,
-          ),
-        )
+        jsonDecode(e) as Map<String, dynamic>,
+      ),
+    )
         .toList();
     if (!mounted) return;
     setState(() => savedMatches = loaded);
@@ -364,7 +328,7 @@ abstract class ScoreboardStateBase<T extends StatefulWidget> extends State<T> {
         giveServeToLeft();
       }
     });
-    _speak(_buildScoreAnnouncement());
+    _announceScore();
   }
 
   void addScoreB() {
@@ -379,7 +343,7 @@ abstract class ScoreboardStateBase<T extends StatefulWidget> extends State<T> {
         giveServeToRight();
       }
     });
-    _speak(_buildScoreAnnouncement());
+    _announceScore();
   }
 
   void loseRallyByServingTeam() {
@@ -392,6 +356,37 @@ abstract class ScoreboardStateBase<T extends StatefulWidget> extends State<T> {
         giveServeToLeft();
       }
     });
+  }
+
+  // 점수 변경 후 TTS 안내
+  void _announceScore() {
+    if (!_ttsEnabled) return;
+    final a = scoreA;
+    final b = scoreB;
+    final total = a + b;
+    final cp = (targetScore == 21)
+        ? 11
+        : (targetScore == 25)
+        ? 13
+        : (targetScore / 2).ceil();
+    String text;
+    if (isGameFinished()) {
+      text = '게임 종료! $a 대 $b';
+    } else if (useDeuce && a == b && a >= targetScore - 1) {
+      text = '듀스';
+    } else if ((a == targetScore - 1 && a > b) ||
+        (b == targetScore - 1 && b > a)) {
+      text = '게임포인트! $a 대 $b';
+    } else if (useDeuce &&
+        (a >= targetScore || b >= targetScore) &&
+        (a - b).abs() == 1) {
+      text = '게임포인트! $a 대 $b';
+    } else if (total == cp) {
+      text = '$a 대 $b, 코트 체인지';
+    } else {
+      text = '$a 대 $b';
+    }
+    _speak(text);
   }
 
   void changeCourt() {
@@ -428,6 +423,7 @@ abstract class ScoreboardStateBase<T extends StatefulWidget> extends State<T> {
           ? ServeSide.right
           : ServeSide.left;
     });
+    _speak('코트 체인지');
   }
 
   void applyServeSetup(ScoreboardServeSetupResult result) {

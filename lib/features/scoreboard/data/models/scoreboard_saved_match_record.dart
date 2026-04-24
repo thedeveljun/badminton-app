@@ -1,5 +1,4 @@
 /// myTeamSide: 'left' | 'right' | 'none'
-/// 저장 시 사용자가 선택한 "나의 팀" 기준
 class ScoreboardSavedMatchRecord {
   final String savedAt;
   final String leftPlayer1;
@@ -10,7 +9,7 @@ class ScoreboardSavedMatchRecord {
   final int scoreB;
   final int targetScore;
   final bool useDeuce;
-  final String myTeamSide; // 'left' | 'right' | 'none'
+  final String myTeamSide;
 
   const ScoreboardSavedMatchRecord({
     required this.savedAt,

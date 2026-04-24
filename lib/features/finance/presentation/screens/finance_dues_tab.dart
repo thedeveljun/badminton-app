@@ -2,11 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'finance_models.dart';
 
-// ============================================================
-// finance_dues_tab.dart
-// 회비납부 탭 위젯 + 관련 소형 위젯
-// ============================================================
-
 class DuesTab extends StatefulWidget {
   final List<DuesRecord> dues;
   final List<DuesRecord> filteredDues;
@@ -171,13 +166,10 @@ class _DuesTabState extends State<DuesTab> {
       children: [
         Container(
           color: const Color.fromARGB(255, 10, 36, 92),
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+          padding: const EdgeInsets.fromLTRB(14, 4, 14, 4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                ],
-              ),
               Row(
                 children: [
                   StatusChip(
@@ -189,17 +181,18 @@ class _DuesTabState extends State<DuesTab> {
                   StatusChip(
                     label: '미납',
                     count: widget.unpaidCount,
-                    color: const Color.fromARGB(255, 115, 115, 115), // 회색
+                    color: const Color(0xFFAAAAAA),
+                    bgColor: const Color(0x33AAAAAA),
                   ),
                   const SizedBox(width: 6),
                   StatusChip(
                     label: '전체',
                     count: widget.dues.length,
-                    color: const Color(0xFF5B8ABB),
+                    color: const Color(0xFF9DC3E6),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -207,7 +200,8 @@ class _DuesTabState extends State<DuesTab> {
                     child: AmountSummaryBlock(
                       label: '납부총액',
                       amount: widget.totalDues,
-                      color: const Color.fromARGB(255, 255, 255, 255),
+                      color: const Color(0xFFFFC300),
+                      transparent: true,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -215,7 +209,8 @@ class _DuesTabState extends State<DuesTab> {
                     child: AmountSummaryBlock(
                       label: '미납총액',
                       amount: widget.unpaidTotal,
-                      color: const Color.fromARGB(255, 255, 185, 8),
+                      color: const Color.fromARGB(255, 247, 248, 248),
+                      transparent: true,
                     ),
                   ),
                 ],
@@ -419,29 +414,24 @@ class _DuesTabState extends State<DuesTab> {
               ],
               if (_selectedDiscountKind == 'free') ...[
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 30,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF6DA),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFFE4C96A)),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        child: const Text(
-                          '무료 회원은 0원으로 처리됩니다.',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF7A5500),
-                          ),
-                        ),
-                      ),
+                Container(
+                  width: double.infinity,
+                  height: 30,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF6DA),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE4C96A)),
+                  ),
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    '무료 회원은 0원으로 처리됩니다.',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF7A5500),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ],
@@ -450,7 +440,7 @@ class _DuesTabState extends State<DuesTab> {
 
         Container(
           color: const Color(0xFFF6F7FA),
-          padding: const EdgeInsets.fromLTRB(14, 4, 14, 4),
+          padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
           child: Row(
             children: [
               Expanded(
@@ -482,7 +472,7 @@ class _DuesTabState extends State<DuesTab> {
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: const BorderSide(
-                          color: Color.fromARGB(255, 254, 254, 254),
+                          color: Color(0xFFD4D8DE),
                           width: 1.1,
                         ),
                       ),
@@ -494,6 +484,7 @@ class _DuesTabState extends State<DuesTab> {
                         ),
                       ),
                     ),
+                    onChanged: (_) => widget.onRowChanged(),
                   ),
                 ),
               ),
@@ -625,8 +616,8 @@ class DuesRow extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 120),
-        margin: const EdgeInsets.only(bottom: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+        margin: const EdgeInsets.only(bottom: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
         decoration: BoxDecoration(
           color: record.isPaid
               ? const Color(0xFFEAF5EA)
@@ -642,8 +633,8 @@ class DuesRow extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 48,
-              height: 24,
+              width: 44,
+              height: 22,
               decoration: BoxDecoration(
                 color: statusColor,
                 borderRadius: BorderRadius.circular(6),
@@ -710,7 +701,7 @@ class DuesRow extends StatelessWidget {
                         ? fmtAmt(record.amount)
                         : '-',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: FontWeight.w800,
                       color: record.isPaid
                           ? const Color(0xFF1A5C30)
@@ -723,7 +714,7 @@ class DuesRow extends StatelessWidget {
                     Text(
                       record.paidDate,
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w400,
                         color: Color.fromARGB(255, 49, 49, 49),
                       ),
@@ -760,8 +751,8 @@ class _DiscountKindChip extends StatelessWidget {
     onTap: onTap,
     child: AnimatedContainer(
       duration: const Duration(milliseconds: 120),
-      height: 30,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      height: 27,
+      padding: const EdgeInsets.symmetric(horizontal: 11),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(8),
@@ -794,7 +785,7 @@ class _SettingAmountField extends StatelessWidget {
         controller: controller,
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,]'))],
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         textAlign: TextAlign.center,
         decoration: InputDecoration(
           suffixText: suffix,
@@ -840,10 +831,7 @@ class _SettingNumberField extends StatelessWidget {
         textAlign: TextAlign.center,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
-            fontSize: 11,
-            color: Color.fromARGB(255, 255, 255, 255),
-          ),
+          hintStyle: const TextStyle(fontSize: 11, color: Color(0xFFAAAAAA)),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 6,
             vertical: 2,

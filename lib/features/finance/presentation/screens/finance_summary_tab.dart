@@ -1,9 +1,36 @@
 import 'package:flutter/material.dart';
 import 'finance_models.dart';
 
-// ============================================================
-// finance_summary_tab.dart — 요약 탭
-// ============================================================
+/// 숫자를 한글로 (팔백삼십육만이천원)
+String _toKoreanFull(int amount) {
+  if (amount == 0) return '영원';
+  final units = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+  final pos = ['', '십', '백', '천'];
+  final bigPos = ['', '만', '억', '조'];
+  String result = '';
+  int bigIdx = 0;
+  int n = amount.abs();
+  while (n > 0) {
+    final chunk = n % 10000;
+    if (chunk != 0) {
+      String chunkStr = '';
+      int c = chunk;
+      for (int i = 0; c > 0; i++) {
+        final digit = c % 10;
+        if (digit != 0) {
+          final d = (digit == 1 && i > 0) ? '' : units[digit];
+          chunkStr = '$d${pos[i]}$chunkStr';
+        }
+        c ~/= 10;
+      }
+      result = '$chunkStr${bigPos[bigIdx]}$result';
+    }
+    bigIdx++;
+    n ~/= 10000;
+  }
+  if (amount < 0) result = '마이너스$result';
+  return '${result}원';
+}
 
 class SummaryTab extends StatelessWidget {
   final List<Transaction> transactions;
@@ -68,7 +95,6 @@ class SummaryTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(14),
       children: [
-        // 기간 선택
         PeriodSelector(
           current: summaryPeriod,
           rangeStart: rangeStart,
@@ -77,9 +103,9 @@ class SummaryTab extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // 현재 잔액 카드
+        // 현재 잔액 박스
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           decoration: BoxDecoration(
             color: const Color.fromARGB(255, 12, 37, 102),
             borderRadius: BorderRadius.circular(16),
@@ -89,28 +115,34 @@ class SummaryTab extends StatelessWidget {
               const Text(
                 '현재 잔액',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: Colors.white70,
+                  letterSpacing: -0.2,
                 ),
               ),
-              const SizedBox(height: 1),
-              Text(
-                fmtAmt(balance),
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: -0.5,
+              const SizedBox(height: 2),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  fmtAmt(balance),
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.8,
+                    height: 1.1,
+                  ),
                 ),
               ),
-              const SizedBox(height: 1),
+              const SizedBox(height: 2),
               Text(
-                fmtKorean(balance),
+                _toKoreanFull(balance),
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 15,
                   fontWeight: FontWeight.w400,
                   color: Colors.white70,
+                  letterSpacing: -0.2,
                 ),
               ),
             ],
@@ -125,7 +157,8 @@ class SummaryTab extends StatelessWidget {
               child: SummaryAmtCard(
                 label: '총 수입',
                 amount: income,
-                color: const Color.fromARGB(255, 33, 125, 70),
+                color: const Color(0xFF217D46),
+                bgColor: const Color(0xFFEAF5EE),
                 icon: Icons.arrow_upward_rounded,
               ),
             ),
@@ -135,6 +168,7 @@ class SummaryTab extends StatelessWidget {
                 label: '총 지출',
                 amount: expense,
                 color: const Color(0xFFB05B5B),
+                bgColor: const Color(0xFFFFF0F0),
                 icon: Icons.arrow_downward_rounded,
               ),
             ),
@@ -142,13 +176,13 @@ class SummaryTab extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // 월별 수입/지출
         const Text(
           '월별 수입/지출',
           style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
             color: Color(0xFF222222),
+            letterSpacing: -0.3,
           ),
         ),
         const SizedBox(height: 8),
@@ -184,11 +218,11 @@ class SummaryTab extends StatelessWidget {
   }
 }
 
-// ── 총수입/지출 카드 ──────────────────────────────────────────
 class SummaryAmtCard extends StatelessWidget {
   final String label;
   final int amount;
   final Color color;
+  final Color bgColor;
   final IconData icon;
 
   const SummaryAmtCard({
@@ -196,41 +230,48 @@ class SummaryAmtCard extends StatelessWidget {
     required this.label,
     required this.amount,
     required this.color,
+    required this.bgColor,
     required this.icon,
   });
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(7),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     decoration: BoxDecoration(
-      color: color.withOpacity(0.08),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: color.withOpacity(0.3)),
+      color: bgColor,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: color.withOpacity(0.3), width: 1.2),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 4),
+            Icon(icon, size: 15, color: color),
+            const SizedBox(width: 5),
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
                 color: color,
+                letterSpacing: -0.2,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 2),
-        Text(
-          fmtAmt(amount),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            color: color,
+        const SizedBox(height: 6),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            fmtAmt(amount),
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: color,
+              letterSpacing: -0.5,
+            ),
           ),
         ),
       ],
@@ -238,7 +279,6 @@ class SummaryAmtCard extends StatelessWidget {
   );
 }
 
-// ── 월별 행 ───────────────────────────────────────────────────
 class MonthlyRow extends StatelessWidget {
   final String label;
   final int income, expense, balance;
@@ -253,12 +293,19 @@ class MonthlyRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 6),
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    margin: const EdgeInsets.only(bottom: 8),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       border: Border.all(color: const Color(0xFFE0E4EC)),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x06000000),
+          blurRadius: 4,
+          offset: Offset(0, 1),
+        ),
+      ],
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,12 +313,13 @@ class MonthlyRow extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF333333),
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF222222),
+            letterSpacing: -0.3,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
@@ -326,21 +374,27 @@ class MonthItem extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: color.withOpacity(0.7),
+          letterSpacing: -0.2,
         ),
       ),
-      Text(
-        fmtAmt(amount),
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-          color: color,
+      const SizedBox(height: 2),
+      FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Text(
+          fmtAmt(amount),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: color,
+            letterSpacing: -0.5,
+          ),
         ),
       ),
     ],
   );
 }
 
-// ── 기간 선택 ─────────────────────────────────────────────────
 class PeriodSelector extends StatelessWidget {
   final String current;
   final DateTime rangeStart, rangeEnd;
@@ -361,7 +415,7 @@ class PeriodSelector extends StatelessWidget {
         '${rangeEnd.year}.${rangeEnd.month.toString().padLeft(2, '0')}';
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -373,12 +427,13 @@ class PeriodSelector extends StatelessWidget {
           const Text(
             '기간 선택',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: Color(0xFF333333),
+              letterSpacing: -0.2,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Row(
             children: [
               for (final p in ['전체', '이번달', '직접선택']) ...[
@@ -408,8 +463,8 @@ class PeriodSelector extends StatelessWidget {
                   },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 120),
-                    height: 30,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    height: 34,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(
                       color: current == p
                           ? const Color(0xFF5B8ABB)
@@ -425,8 +480,8 @@ class PeriodSelector extends StatelessWidget {
                     child: Text(
                       p,
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                         color: current == p
                             ? Colors.white
                             : const Color(0xFF555555),
@@ -434,27 +489,27 @@ class PeriodSelector extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
               ],
             ],
           ),
           if (current == '직접선택') ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               rangeLabel,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 color: Color(0xFF5B8ABB),
                 fontWeight: FontWeight.w600,
               ),
             ),
           ],
           if (current == '이번달') ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               '${rangeStart.year}년 ${rangeStart.month}월',
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 color: Color(0xFF5B8ABB),
                 fontWeight: FontWeight.w600,
               ),

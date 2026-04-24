@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:funminton_club_app/features/members/presentation/widgets/member_excel_tools.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../domain/models/member_item.dart';
 import '../../utils/member_storage.dart';
-import 'member_row.dart';
-import 'member_dialog.dart';
-import 'member_filter_widgets.dart';
-
-// ============================================================
-// club_member_screen.dart — 회원 목록 메인 화면
-// ============================================================
+import '../widgets/member_row.dart';
+import '../widgets/member_dialog.dart';
+import '../widgets/member_filter_widgets.dart';
+import '../widgets/member_excel_tools.dart';
 
 List<MemberItem> get _defaultMembers => [
   MemberItem(
@@ -104,7 +100,7 @@ class ClubMemberScreen extends StatefulWidget {
 
 class _ClubMemberScreenState extends State<ClubMemberScreen> {
   final String clubName = '중앙클럽';
-  String get _title => '${clubName}회원';
+  String get _title => '$clubName회원';
 
   final TextEditingController _searchCtrl = TextEditingController();
   String _selectedGender = '전체';
@@ -130,8 +126,10 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
 
   Future<void> _loadMembers() async {
     final saved = await MemberStorage.loadMembers();
+    if (!mounted) return;
     setState(() {
-      if (saved != null) {
+      _members.clear();
+      if (saved != null && saved.isNotEmpty) {
         _members.addAll(saved);
       } else {
         _members.addAll(_defaultMembers);
@@ -163,25 +161,35 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
 
   Future<void> _call(String phone) async {
     final uri = Uri(scheme: 'tel', path: phone.replaceAll('-', ''));
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          this.context,
+        ).showSnackBar(SnackBar(content: Text('$phone 전화 연결에 실패했습니다.')));
+      }
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$phone 전화 연결에 실패했습니다.')));
+        this.context,
+      ).showSnackBar(const SnackBar(content: Text('전화 연결에 실패했습니다.')));
     }
   }
 
   List<MemberItem> get _filtered {
     List<MemberItem> result = [..._members];
     final kw = _searchCtrl.text.trim();
-    if (kw.isNotEmpty)
+    if (kw.isNotEmpty) {
       result = result.where((m) => m.name.contains(kw)).toList();
-    if (_selectedGender != '전체')
+    }
+    if (_selectedGender != '전체') {
       result = result.where((m) => m.gender == _selectedGender).toList();
-    if (_selectedGrade != '전체')
+    }
+    if (_selectedGrade != '전체') {
       result = result.where((m) => m.grade == _selectedGrade).toList();
+    }
     result.sort(
       (a, b) =>
           _ascending ? a.name.compareTo(b.name) : b.name.compareTo(a.name),
@@ -239,11 +247,11 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           '선택삭제',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
         ),
         content: Text(
           '선택한 회원 ${_selectedIds.length}명을 삭제하시겠습니까?',
-          style: const TextStyle(fontSize: 16, height: 1.45),
+          style: const TextStyle(fontSize: 14, height: 1.45),
         ),
         actions: [
           TextButton(
@@ -277,10 +285,10 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           '회원 삭제',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         content: Text(
-          '${member.name} 회원을 \n삭제하시겠습니까?',
+          '${member.name} 회원을\n삭제하시겠습니까?',
           style: const TextStyle(fontSize: 13, height: 1.4),
         ),
         actions: [
@@ -320,7 +328,7 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
               Text(
                 '${member.name}(${member.gender})',
                 style: const TextStyle(
-                  fontSize: 17,
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF111111),
                 ),
@@ -401,6 +409,7 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (result == 'edit') _showMemberDialog(editTarget: member);
     if (result == 'delete') _deleteOne(member);
   }
@@ -462,7 +471,7 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
         title: Text(
           _title,
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 17,
             fontWeight: FontWeight.w700,
             color: Color(0xFF111111),
             letterSpacing: -0.3,
@@ -477,9 +486,8 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: SizedBox(
-        width: 112,
         height: 44,
-        child: FloatingActionButton(
+        child: FloatingActionButton.extended(
           heroTag: 'member_fab',
           elevation: 2,
           backgroundColor: const Color(0xFFCFE1F8),
@@ -488,20 +496,14 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
             borderRadius: BorderRadius.circular(18),
           ),
           onPressed: () => _showMemberDialog(),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.add, size: 16),
-              SizedBox(width: 4),
-              Text(
-                '회원등록',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ],
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text(
+            '회원등록',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
+            ),
           ),
         ),
       ),
@@ -514,7 +516,7 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
             child: const Text(
               '단체회원 등록은 샘플을 다운받아 양식에 맞게 작성.\n엑셀업로드 버튼으로 여러 명 한꺼번에 등록 가능',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.w300,
                 height: 1.3,
                 color: Color.fromARGB(255, 255, 254, 254),
@@ -524,7 +526,7 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 80),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -536,7 +538,7 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
                         onChanged: (_) => setState(() {}),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 3),
                     Expanded(
                       flex: 3,
                       child: MemberFilterBox(
@@ -549,7 +551,7 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Expanded(
                       flex: 3,
                       child: MemberFilterBox(
@@ -568,15 +570,17 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
                 Row(
                   children: [
                     MemberPillButton(
-                      text: allSelected ? '전체해제' : '전체선택',
+                      text: '전체선택',
                       enabled: true,
-                      onTap: _toggleAll,
+                      onTap: () => setState(() {
+                        _selectedIds.addAll(visible.map((e) => e.id));
+                      }),
                     ),
                     const SizedBox(width: 6),
                     MemberPillButton(
-                      text: '선택삭제',
+                      text: '선택해제',
                       enabled: _selectedIds.isNotEmpty,
-                      onTap: _deleteSelected,
+                      onTap: () => setState(() => _selectedIds.clear()),
                     ),
                     const SizedBox(width: 6),
                     MemberPillButton(
@@ -589,7 +593,7 @@ class _ClubMemberScreenState extends State<ClubMemberScreen> {
                       '총 ${visible.length}명',
                       style: const TextStyle(
                         fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w700,
                         color: Color(0xFF111111),
                         letterSpacing: -0.2,
                       ),

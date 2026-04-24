@@ -48,7 +48,6 @@ class _ScoreboardBulkPlayerEditPageState
       text: _displayOrEmpty(widget.rightPlayer2, '선수4'),
     );
 
-    // 첫 프레임 완료 후 세로모드 전환 → 잘림 방지
     WidgetsBinding.instance.addPostFrameCallback((_) {
       SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
@@ -59,7 +58,6 @@ class _ScoreboardBulkPlayerEditPageState
 
   @override
   void dispose() {
-    // 가로모드 복원
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
@@ -102,13 +100,13 @@ class _ScoreboardBulkPlayerEditPageState
       hintText: hint,
       hintStyle: const TextStyle(
         color: Colors.grey,
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: FontWeight.w400,
       ),
       filled: true,
       fillColor: Colors.white,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       counterText: '',
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
@@ -126,7 +124,7 @@ class _ScoreboardBulkPlayerEditPageState
     required String hint,
   }) {
     return SizedBox(
-      height: 48,
+      height: 46,
       child: TextField(
         controller: controller,
         maxLength: 12,
@@ -135,7 +133,7 @@ class _ScoreboardBulkPlayerEditPageState
         inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\n'))],
         style: const TextStyle(
           color: Colors.black87,
-          fontSize: 17,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
         ),
         decoration: _fieldDecoration(hint),
@@ -154,11 +152,7 @@ class _ScoreboardBulkPlayerEditPageState
         child: const SizedBox(
           width: 40,
           height: 40,
-          child: Icon(
-            Icons.swap_horiz_rounded,
-            color: Colors.black87,
-            size: 20,
-          ),
+          child: Icon(Icons.swap_horiz_rounded, color: Colors.white, size: 20),
         ),
       ),
     );
@@ -171,8 +165,8 @@ class _ScoreboardBulkPlayerEditPageState
   }) {
     if (filled) {
       return SizedBox(
-        width: 140,
-        height: 46,
+        width: 130,
+        height: 44,
         child: FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF7E57C2),
@@ -180,26 +174,26 @@ class _ScoreboardBulkPlayerEditPageState
             elevation: 0,
             padding: EdgeInsets.zero,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(22),
             ),
           ),
           onPressed: onTap,
           child: Text(
             text,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
           ),
         ),
       );
     }
     return SizedBox(
-      width: 140,
-      height: 46,
+      width: 130,
+      height: 44,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: Color(0xFF7E57C2), width: 2.0),
           padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(22),
           ),
         ),
         onPressed: onTap,
@@ -207,7 +201,7 @@ class _ScoreboardBulkPlayerEditPageState
           '취소',
           style: TextStyle(
             color: Colors.black87,
-            fontSize: 20,
+            fontSize: 17,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -230,15 +224,16 @@ class _ScoreboardBulkPlayerEditPageState
           '선수명 입력',
           style: TextStyle(
             color: Colors.black,
-            fontSize: 28,
-            fontWeight: FontWeight.w400,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.black, size: 30),
+        iconTheme: const IconThemeData(color: Colors.black, size: 24),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(18, 22, 18, bottomInset + 20),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.fromLTRB(18, 20, 18, bottomInset + 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -246,13 +241,12 @@ class _ScoreboardBulkPlayerEditPageState
                 '선수명을 입력하세요',
                 style: TextStyle(
                   color: Colors.black,
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
 
-              // 선수1 ↔ 선수3
               Row(
                 children: [
                   Expanded(
@@ -272,9 +266,8 @@ class _ScoreboardBulkPlayerEditPageState
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // 선수2 ↔ 선수4
               Row(
                 children: [
                   Expanded(
@@ -294,9 +287,8 @@ class _ScoreboardBulkPlayerEditPageState
                   ),
                 ],
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
 
-              // 취소 / 확인
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -305,7 +297,7 @@ class _ScoreboardBulkPlayerEditPageState
                     onTap: () => Navigator.pop(context),
                     filled: false,
                   ),
-                  const SizedBox(width: 18),
+                  const SizedBox(width: 16),
                   _actionButton(text: '확인', onTap: _submit, filled: true),
                 ],
               ),

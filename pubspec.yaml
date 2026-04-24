@@ -1,5 +1,5 @@
 name: funminton_club_app
-description: "A new Flutter project."
+description: "배드민턴 클럽 관리 앱"
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -19,17 +19,19 @@ dependencies:
   open_filex: ^4.7.0
   downloadsfolder: ^1.1.0
   shared_preferences: ^2.3.2
-  url_launcher: ^6.3.1       # ← 전화걸기 기능 (신규 추가)
-  flutter_tts: ^4.2.0     # ← 이 줄 추가
+  url_launcher: ^6.3.1
+  flutter_tts: ^4.2.0
+
+  image_picker: ^1.0.0
+  google_mlkit_text_recognition: ^0.13.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/excel/회원업로드_샘플.xlsx
+    - assets/excel/

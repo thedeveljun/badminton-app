@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:downloadsfolder/downloadsfolder.dart';
-import 'package:excel/excel.dart' hide Border;
-import 'package:file_picker/file_picker.dart';
+import 'package:downloadsfolder/downloadsfolder.dart' hide Context;
+import 'package:excel/excel.dart' hide Border, Context;
+import 'package:file_picker/file_picker.dart' hide Context;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:open_filex/open_filex.dart' hide Context;
+import 'package:path_provider/path_provider.dart' hide Context;
+import 'package:share_plus/share_plus.dart' hide Context;
 
 class ImportedMemberRow {
   final int sourceRowNumber;
@@ -66,18 +66,26 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
 
   static const List<String> _headers = ['이름', '성별', '생년월일', '전화번호', '급수', '주소'];
 
+  /// 샘플 파일을 다운로드 폴더로 저장.
+  /// assets에 파일이 없으면 코드로 샘플 엑셀을 생성합니다.
   Future<void> _downloadSampleFile() async {
     if (_isDownloading) return;
 
     setState(() => _isDownloading = true);
 
     try {
-      final ByteData assetData = await rootBundle.load(_sampleAssetPath);
-      final Uint8List bytes = assetData.buffer.asUint8List();
+      Uint8List bytes;
+      try {
+        final ByteData assetData = await rootBundle.load(_sampleAssetPath);
+        bytes = assetData.buffer.asUint8List();
+      } catch (_) {
+        // assets에 없으면 코드로 생성
+        bytes = _buildSampleExcelBytes();
+      }
 
       if (bytes.isEmpty) {
         if (!mounted) return;
-        _showErrorDialog('샘플 파일을 읽지 못했습니다.');
+        _showErrorDialog('샘플 파일을 만들지 못했습니다.');
         return;
       }
 
@@ -85,51 +93,91 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
       final tempFile = File('${tempDir.path}/회원업로드_샘플.xlsx');
       await tempFile.writeAsBytes(bytes, flush: true);
 
-      final bool? saved = await copyFileIntoDownloadFolder(
-        tempFile.path,
-        '회원업로드_샘플.xlsx',
-      );
-
-      if (!mounted) return;
-
-      if (saved != true) {
-        _showErrorDialog('Download 폴더 저장에 실패했습니다.');
-        return;
+      bool? saved;
+      try {
+        saved = await copyFileIntoDownloadFolder(
+          tempFile.path,
+          '회원업로드_샘플.xlsx',
+        );
+      } catch (_) {
+        saved = false;
       }
 
+      if (!mounted) return;
       _lastDownloadedFile = tempFile;
 
-      final BuildContext currentContext = this.context;
-
-      ScaffoldMessenger.of(currentContext).hideCurrentSnackBar();
-      ScaffoldMessenger.of(currentContext).showSnackBar(
-        SnackBar(
-          content: const Text(
-            '직접 넣은 샘플 엑셀파일이 다운로드 폴더에 저장되었습니다.',
-            style: TextStyle(fontSize: 12),
+      if (saved == true) {
+        ScaffoldMessenger.of(this.context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(this.context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              '샘플 엑셀파일이 다운로드 폴더에 저장되었습니다.',
+              style: TextStyle(fontSize: 12),
+            ),
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: '열기',
+              onPressed: _openLastDownloadedFile,
+            ),
           ),
-          duration: const Duration(seconds: 5),
-          action: SnackBarAction(
-            label: '열기',
-            onPressed: _openLastDownloadedFile,
+        );
+      } else {
+        // 다운로드 폴더 저장 실패 시 공유로 대체 안내
+        ScaffoldMessenger.of(this.context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              '다운로드 폴더 저장 실패. 공유를 이용해 저장하세요.',
+              style: TextStyle(fontSize: 12),
+            ),
+            action: SnackBarAction(
+              label: '공유',
+              onPressed: _shareLastDownloadedFile,
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
       if (!mounted) return;
-      _showErrorDialog(
-        '샘플 파일 다운로드 중 오류가 발생했습니다.\n\n'
-        '확인사항:\n'
-        '1. assets/excel/회원업로드_샘플.xlsx 파일이 실제로 있는지\n'
-        '2. pubspec.yaml 에 assets 등록이 되어 있는지\n'
-        '3. flutter pub get 실행했는지\n\n'
-        '오류 내용:\n$e',
-      );
+      _showErrorDialog('샘플 파일 다운로드 중 오류가 발생했습니다.\n$e');
     } finally {
       if (mounted) {
         setState(() => _isDownloading = false);
       }
     }
+  }
+
+  Uint8List _buildSampleExcelBytes() {
+    final excel = Excel.createExcel();
+    final defaultSheetName = excel.getDefaultSheet() ?? 'Sheet1';
+    excel.rename(defaultSheetName, '회원업로드');
+    final sheet = excel['회원업로드'];
+
+    // 헤더
+    for (int i = 0; i < _headers.length; i++) {
+      sheet
+          .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+          .value = TextCellValue(
+        _headers[i],
+      );
+    }
+
+    // 샘플 데이터
+    final sampleRows = [
+      ['홍길동', '남', '900101', '010-1234-5678', 'B', '서울시 중구'],
+      ['김영희', '여', '920505', '010-2345-6789', 'C', '경기도 성남시'],
+    ];
+    for (int r = 0; r < sampleRows.length; r++) {
+      for (int c = 0; c < sampleRows[r].length; c++) {
+        sheet
+            .cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: r + 1))
+            .value = TextCellValue(
+          sampleRows[r][c],
+        );
+      }
+    }
+
+    final encoded = excel.encode();
+    return encoded == null ? Uint8List(0) : Uint8List.fromList(encoded);
   }
 
   Future<void> _openLastDownloadedFile() async {
@@ -351,7 +399,6 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
       if (digits.startsWith('02')) {
         return '${digits.substring(0, 2)}-${digits.substring(2, 6)}-${digits.substring(6)}';
       }
-
       return '${digits.substring(0, 3)}-${digits.substring(3, 6)}-${digits.substring(6)}';
     }
 
@@ -387,11 +434,9 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
 
   Map<String, int> _buildDuplicateCountMap(List<ImportedMemberRow> rows) {
     final map = <String, int>{};
-
     for (final row in rows) {
       map[row.duplicateKey] = (map[row.duplicateKey] ?? 0) + 1;
     }
-
     return map;
   }
 
@@ -405,7 +450,6 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
   Future<void> _showPreviewDialog(ExcelImportResult result) async {
     if (!mounted) return;
 
-    final BuildContext currentContext = this.context;
     final duplicateCountMap = _buildDuplicateCountMap(result.rows);
     final duplicateRows = result.rows
         .where((row) => _isDuplicateRow(row, duplicateCountMap))
@@ -414,7 +458,7 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
     final canImport = result.rows.isNotEmpty;
 
     await showDialog(
-      context: currentContext,
+      context: this.context,
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
@@ -424,7 +468,7 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
           ),
           title: const Text(
             '업로드 미리보기',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
           content: SizedBox(
             width: 560,
@@ -450,7 +494,7 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
                 const Text(
                   '중복 회원은 빨간색 배경으로 표시됩니다.',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: Color(0xFFB00020),
                     fontWeight: FontWeight.w600,
                   ),
@@ -474,7 +518,7 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
                                   width: double.infinity,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 10,
-                                    vertical: 9,
+                                    vertical: 8,
                                   ),
                                   decoration: const BoxDecoration(
                                     color: Color(0xFFF3F6FA),
@@ -495,12 +539,11 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
                                     row,
                                     duplicateCountMap,
                                   );
-
                                   return Container(
                                     width: double.infinity,
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
-                                      vertical: 9,
+                                      vertical: 8,
                                     ),
                                     decoration: BoxDecoration(
                                       color: isDuplicate
@@ -567,7 +610,7 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
                                           style: const TextStyle(fontSize: 12),
                                         ),
                                         Text(
-                                          '급수: ${row.grade}',
+                                          '${row.grade}조',
                                           style: const TextStyle(fontSize: 12),
                                         ),
                                         Text(
@@ -638,9 +681,7 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
                   ? null
                   : () async {
                       Navigator.pop(dialogContext);
-
                       await widget.onImportRows(result.rows);
-
                       if (!mounted) return;
                       _showImportResultDialog(result, duplicateRows);
                     },
@@ -661,16 +702,13 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
 
   void _showImportResultDialog(ExcelImportResult result, int duplicateRows) {
     if (!mounted) return;
-
-    final BuildContext currentContext = this.context;
-
     showDialog(
-      context: currentContext,
+      context: this.context,
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text(
             '엑셀 업로드 결과',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
           content: SizedBox(
             width: 420,
@@ -680,15 +718,15 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
                 children: [
                   Text(
                     '정상 등록 대상: ${result.rows.length}건',
-                    style: const TextStyle(fontSize: 14),
+                    style: const TextStyle(fontSize: 13),
                   ),
                   Text(
                     '중복 표시된 행: $duplicateRows건',
-                    style: const TextStyle(fontSize: 14),
+                    style: const TextStyle(fontSize: 13),
                   ),
                   Text(
                     '오류 행: ${result.errors.length}건',
-                    style: const TextStyle(fontSize: 14),
+                    style: const TextStyle(fontSize: 13),
                   ),
                   const SizedBox(height: 12),
                   if (result.errors.isNotEmpty) ...[
@@ -731,16 +769,13 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
 
   void _showErrorDialog(String message) {
     if (!mounted) return;
-
-    final BuildContext currentContext = this.context;
-
     showDialog(
-      context: currentContext,
+      context: this.context,
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text(
             '오류',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
           content: Text(
             message,
@@ -765,10 +800,9 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
         TextButton(
           onPressed: _isDownloading ? null : _downloadSampleFile,
           style: TextButton.styleFrom(
-            padding: const EdgeInsets.only(left: 2, right: 0),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             minimumSize: const Size(38, 30),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            alignment: Alignment.centerRight,
           ),
           child: _isDownloading
               ? const SizedBox(
@@ -788,10 +822,9 @@ class _MemberExcelToolsState extends State<MemberExcelTools> {
         TextButton(
           onPressed: _isUploading ? null : _pickAndImportExcel,
           style: TextButton.styleFrom(
-            padding: const EdgeInsets.only(left: 10, right: 0),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             minimumSize: const Size(38, 30),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            alignment: Alignment.centerRight,
           ),
           child: _isUploading
               ? const SizedBox(

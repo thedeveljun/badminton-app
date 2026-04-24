@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   downloadsfolder
+  file_selector_windows
   flutter_tts
   share_plus
   url_launcher_windows

@@ -1,5 +1,4 @@
-/// 클럽 회원 데이터 모델 (Member + MemberItem 통합)
-/// 앱 전체에서 이 클래스 하나만 사용합니다.
+/// 클럽 회원 데이터 모델
 class MemberItem {
   final String id;
   final String name;
@@ -8,7 +7,7 @@ class MemberItem {
   final String grade; // 'A' | 'B' | 'C' | 'D' | '초심'
   final String phone;
   final String address;
-  final String joinDate; // ★ 가입월 (예: '2026-04')
+  final String joinDate;
 
   MemberItem({
     String? id,
@@ -20,23 +19,18 @@ class MemberItem {
     this.address = '',
     String? joinDate,
   }) : id = id ?? _generateId(name, birth, phone),
-       joinDate = joinDate ?? _thisMonth();
+        joinDate = joinDate ?? _thisMonth();
 
-  /// 현재 월 반환 (예: '2026-04')
   static String _thisMonth() {
     final n = DateTime.now();
     return '${n.year}-${n.month.toString().padLeft(2, '0')}';
   }
 
-  /// ID는 이름+생년월일+전화번호 조합으로 생성합니다.
   static String _generateId(String name, String birth, String phone) {
     final cleaned = phone.replaceAll('-', '');
     return '${name}_${birth}_$cleaned';
   }
 
-  // -------------------------------------------------------
-  // copyWith — 수정 시 기존 id를 유지합니다.
-  // -------------------------------------------------------
   MemberItem copyWith({
     String? name,
     String? gender,
@@ -58,9 +52,6 @@ class MemberItem {
     );
   }
 
-  // -------------------------------------------------------
-  // 직렬화 / 역직렬화 (로컬 저장소용)
-  // -------------------------------------------------------
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -70,7 +61,7 @@ class MemberItem {
       'grade': grade,
       'phone': phone,
       'address': address,
-      'joinDate': joinDate, // ★ 추가
+      'joinDate': joinDate,
     };
   }
 
@@ -87,13 +78,10 @@ class MemberItem {
       grade: (map['grade'] ?? map['level'] ?? '').toString(),
       phone: phone,
       address: (map['address'] ?? '').toString(),
-      joinDate: (map['joinDate'] ?? '').toString(), // ★ 추가
+      joinDate: (map['joinDate'] ?? '').toString(),
     );
   }
 
-  // -------------------------------------------------------
-  // 동등 비교 — id 기준
-  // -------------------------------------------------------
   @override
   bool operator ==(Object other) =>
       identical(this, other) || (other is MemberItem && other.id == id);

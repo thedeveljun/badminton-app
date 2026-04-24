@@ -29,8 +29,9 @@ class _ScoreboardSavedMatchesPageState
   @override
   void initState() {
     super.initState();
-    _savedMatches =
-    List<ScoreboardSavedMatchRecord>.from(widget.initialMatches);
+    _savedMatches = List<ScoreboardSavedMatchRecord>.from(
+      widget.initialMatches,
+    );
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
 
@@ -59,27 +60,29 @@ class _ScoreboardSavedMatchesPageState
 
   Future<void> _persistMatches() async {
     final prefs = await SharedPreferences.getInstance();
-    final encoded =
-    _savedMatches.map((e) => jsonEncode(e.toMap())).toList();
+    final encoded = _savedMatches.map((e) => jsonEncode(e.toMap())).toList();
     await prefs.setStringList(widget.savedMatchesKey, encoded);
   }
 
   Future<void> _deleteAllSavedMatches() async {
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('전체삭제'),
-        content: const Text('저장된 기록을 모두 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('취소')),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('확인')),
-        ],
-      ),
-    ) ??
+    final shouldDelete =
+        await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('전체삭제'),
+            content: const Text('저장된 기록을 모두 삭제하시겠습니까?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('취소'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('확인'),
+              ),
+            ],
+          ),
+        ) ??
         false;
 
     if (!shouldDelete || !mounted) return;
@@ -97,8 +100,9 @@ class _ScoreboardSavedMatchesPageState
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-          content: Text('저장된 기록을 모두 삭제했습니다'),
-          duration: Duration(seconds: 1)),
+        content: Text('저장된 기록을 모두 삭제했습니다'),
+        duration: Duration(seconds: 1),
+      ),
     );
   }
 
@@ -106,28 +110,31 @@ class _ScoreboardSavedMatchesPageState
     if (_selectedIndexes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('삭제할 기록을 선택하세요'),
-            duration: Duration(seconds: 1)),
+          content: Text('삭제할 기록을 선택하세요'),
+          duration: Duration(seconds: 1),
+        ),
       );
       return;
     }
 
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('선택삭제'),
-        content:
-        Text('선택한 ${_selectedIndexes.length}개 기록을 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('취소')),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('확인')),
-        ],
-      ),
-    ) ??
+    final shouldDelete =
+        await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('선택삭제'),
+            content: Text('선택한 ${_selectedIndexes.length}개 기록을 삭제하시겠습니까?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('취소'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('확인'),
+              ),
+            ],
+          ),
+        ) ??
         false;
 
     if (!shouldDelete || !mounted) return;
@@ -146,8 +153,9 @@ class _ScoreboardSavedMatchesPageState
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-          content: Text('선택한 기록을 삭제했습니다'),
-          duration: Duration(seconds: 1)),
+        content: Text('선택한 기록을 삭제했습니다'),
+        duration: Duration(seconds: 1),
+      ),
     );
   }
 
@@ -155,13 +163,16 @@ class _ScoreboardSavedMatchesPageState
     Navigator.pop(
       context,
       ScoreboardSavedMatchesPageResult(
-          savedMatches: _savedMatches, changed: _changed),
+        savedMatches: _savedMatches,
+        changed: _changed,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final allSelected = _savedMatches.isNotEmpty &&
+    final allSelected =
+        _savedMatches.isNotEmpty &&
         _selectedIndexes.length == _savedMatches.length;
 
     return PopScope(
@@ -183,9 +194,10 @@ class _ScoreboardSavedMatchesPageState
           title: const Text(
             '최근 저장 기록',
             style: TextStyle(
-                color: Colors.black,
-                fontSize: 20,
-                fontWeight: FontWeight.w700),
+              color: Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           actions: [
             TextButton(
@@ -201,27 +213,33 @@ class _ScoreboardSavedMatchesPageState
               Container(
                 width: double.infinity,
                 color: Colors.white,
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                 child: Row(
                   children: [
                     TextButton(
                       onPressed: _savedMatches.isEmpty
                           ? null
                           : () {
-                        setState(() {
-                          if (allSelected) {
-                            _selectedIndexes.clear();
-                          } else {
-                            _selectedIndexes
-                              ..clear()
-                              ..addAll(List.generate(
-                                  _savedMatches.length, (i) => i));
-                          }
-                        });
-                      },
+                              setState(() {
+                                if (allSelected) {
+                                  _selectedIndexes.clear();
+                                } else {
+                                  _selectedIndexes
+                                    ..clear()
+                                    ..addAll(
+                                      List.generate(
+                                        _savedMatches.length,
+                                        (i) => i,
+                                      ),
+                                    );
+                                }
+                              });
+                            },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
@@ -234,7 +252,9 @@ class _ScoreboardSavedMatchesPageState
                           : _deleteSelectedSavedMatches,
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
@@ -244,9 +264,10 @@ class _ScoreboardSavedMatchesPageState
                     Text(
                       '선택 ${_selectedIndexes.length}개',
                       style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black54),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black54,
+                      ),
                     ),
                   ],
                 ),
@@ -255,204 +276,198 @@ class _ScoreboardSavedMatchesPageState
               Expanded(
                 child: _savedMatches.isEmpty
                     ? const Center(
-                  child: Text(
-                    '저장된 기록이 없습니다',
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                )
-                    : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(12, 5, 12, 8),
-                  itemCount: _savedMatches.length,
-                  separatorBuilder: (_, __) =>
-                  const SizedBox(height: 3),
-                  itemBuilder: (context, index) {
-                    final item = _savedMatches[index];
-                    final isSelected =
-                    _selectedIndexes.contains(index);
-
-                    final String myTeam = item.myTeamSide;
-                    final int myScore = myTeam == 'left'
-                        ? item.scoreA
-                        : myTeam == 'right'
-                        ? item.scoreB
-                        : -1;
-                    final int oppScore = myTeam == 'left'
-                        ? item.scoreB
-                        : myTeam == 'right'
-                        ? item.scoreA
-                        : -1;
-
-                    final String resultText;
-                    final Color resultColor;
-                    if (myTeam == 'none') {
-                      resultText = '-';
-                      resultColor = Colors.grey;
-                    } else if (myScore > oppScore) {
-                      resultText = '승';
-                      resultColor = const Color(0xFF1565C0);
-                    } else if (myScore < oppScore) {
-                      resultText = '패';
-                      resultColor = const Color(0xFFD32F2F);
-                    } else {
-                      resultText = '무';
-                      resultColor = Colors.grey;
-                    }
-
-                    final String myTeamLabel = myTeam == 'left'
-                        ? '${item.leftPlayer1}/${item.leftPlayer2}'
-                        : myTeam == 'right'
-                        ? '${item.rightPlayer1}/${item.rightPlayer2}'
-                        : '';
-
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: () {
-                        setState(() {
-                          if (isSelected) {
-                            _selectedIndexes.remove(index);
-                          } else {
-                            _selectedIndexes.add(index);
-                          }
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration:
-                        const Duration(milliseconds: 120),
-                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFFEAF3FF)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFF68A0F0)
-                                : const Color(0xFFE4E7EB),
-                            width: isSelected ? 1.4 : 1.0,
+                        child: Text(
+                          '저장된 기록이 없습니다',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black
-                                  .withValues(alpha: 0.04),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
                         ),
-                        child: Row(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 32,
-                              height: 32,
-                              child: Checkbox(
-                                value: isSelected,
-                                materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                                visualDensity:
-                                VisualDensity.compact,
-                                onChanged: (value) {
-                                  setState(() {
-                                    if (value == true) {
-                                      _selectedIndexes.add(index);
-                                    } else {
-                                      _selectedIndexes
-                                          .remove(index);
-                                    }
-                                  });
-                                },
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(12, 5, 12, 8),
+                        itemCount: _savedMatches.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 3),
+                        itemBuilder: (context, index) {
+                          final item = _savedMatches[index];
+                          final isSelected = _selectedIndexes.contains(index);
+
+                          final String myTeam = item.myTeamSide;
+                          final int myScore = myTeam == 'left'
+                              ? item.scoreA
+                              : myTeam == 'right'
+                              ? item.scoreB
+                              : -1;
+                          final int oppScore = myTeam == 'left'
+                              ? item.scoreB
+                              : myTeam == 'right'
+                              ? item.scoreA
+                              : -1;
+
+                          final String resultText;
+                          final Color resultColor;
+                          if (myTeam == 'none') {
+                            resultText = '-';
+                            resultColor = Colors.grey;
+                          } else if (myScore > oppScore) {
+                            resultText = '승';
+                            resultColor = const Color(0xFF1565C0);
+                          } else if (myScore < oppScore) {
+                            resultText = '패';
+                            resultColor = const Color(0xFFD32F2F);
+                          } else {
+                            resultText = '무';
+                            resultColor = Colors.grey;
+                          }
+
+                          final String myTeamLabel = myTeam == 'left'
+                              ? '${item.leftPlayer1}/${item.leftPlayer2}'
+                              : myTeam == 'right'
+                              ? '${item.rightPlayer1}/${item.rightPlayer2}'
+                              : '';
+
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(18),
+                            onTap: () {
+                              setState(() {
+                                if (isSelected) {
+                                  _selectedIndexes.remove(index);
+                                } else {
+                                  _selectedIndexes.add(index);
+                                }
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 120),
+                              padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? const Color(0xFFEAF3FF)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? const Color(0xFF68A0F0)
+                                      : const Color(0xFFE4E7EB),
+                                  width: isSelected ? 1.4 : 1.0,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.04),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.start,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Row(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.center,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          '${item.leftPlayer1}/${item.leftPlayer2}  vs  ${item.rightPlayer1}/${item.rightPlayer2}',
-                                          style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight:
-                                              FontWeight.w600,
-                                              color: Colors.black87),
+                                  SizedBox(
+                                    width: 32,
+                                    height: 32,
+                                    child: Checkbox(
+                                      value: isSelected,
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                      visualDensity: VisualDensity.compact,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          if (value == true) {
+                                            _selectedIndexes.add(index);
+                                          } else {
+                                            _selectedIndexes.remove(index);
+                                          }
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                '${item.leftPlayer1}/${item.leftPlayer2}  vs  ${item.rightPlayer1}/${item.rightPlayer2}',
+                                                style: const TextStyle(
+                                                  fontSize: 13, // ★ 12 → 13
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                            ),
+                                            if (myTeam != 'none') ...[
+                                              const SizedBox(width: 6),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 2,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: resultColor.withValues(
+                                                    alpha: 0.12,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  resultText,
+                                                  style: TextStyle(
+                                                    fontSize: 12, // ★ 11 → 12
+                                                    fontWeight: FontWeight.w700,
+                                                    color: resultColor,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
                                         ),
-                                      ),
-                                      if (myTeam != 'none') ...[
-                                        const SizedBox(width: 6),
-                                        Container(
-                                          padding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: resultColor
-                                                .withValues(
-                                                alpha: 0.12),
-                                            borderRadius:
-                                            BorderRadius.circular(
-                                                8),
-                                          ),
-                                          child: Text(
-                                            resultText,
-                                            style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight:
-                                                FontWeight.w700,
-                                                color: resultColor),
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          children: [
+                                            if (myTeamLabel.isNotEmpty)
+                                              Text(
+                                                '$myTeamLabel  ',
+                                                style: TextStyle(
+                                                  fontSize: 12, // ★ 11 → 12
+                                                  fontWeight: FontWeight.w600,
+                                                  color: resultColor,
+                                                ),
+                                              ),
+                                            Text(
+                                              '${item.scoreA} : ${item.scoreB}',
+                                              style: const TextStyle(
+                                                fontSize: 13, // ★ 12 → 13
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          _formatSavedAt(item.savedAt),
+                                          style: const TextStyle(
+                                            fontSize: 11.5, // ★ 10.5 → 11.5
+                                            color: Colors.black45,
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                       ],
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Row(
-                                    children: [
-                                      if (myTeamLabel.isNotEmpty)
-                                        Text(
-                                          '$myTeamLabel  ',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight:
-                                            FontWeight.w600,
-                                            color: resultColor,
-                                          ),
-                                        ),
-                                      Text(
-                                        '${item.scoreA} : ${item.scoreB}',
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight:
-                                            FontWeight.w500,
-                                            color: Colors.black87),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    _formatSavedAt(item.savedAt),
-                                    style: const TextStyle(
-                                        fontSize: 10.5,
-                                        color: Colors.black45,
-                                        fontWeight:
-                                        FontWeight.w500),
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),

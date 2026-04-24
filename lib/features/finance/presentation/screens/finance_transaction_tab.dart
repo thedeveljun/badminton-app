@@ -1,10 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'finance_models.dart';
-
-// ============================================================
-// finance_transaction_tab.dart
-// 수입/지출 탭 위젯 + 행 위젯
-// ============================================================
 
 class TransactionTab extends StatelessWidget {
   final List<Transaction> transactions;
@@ -22,8 +18,13 @@ class TransactionTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 6) 모든 거래 날짜+id 내림차순 (최신순 = 항상 위에)
     final sorted = List<Transaction>.from(transactions)
-      ..sort((a, b) => b.date.compareTo(a.date));
+      ..sort((a, b) {
+        final dateComp = b.date.compareTo(a.date);
+        if (dateComp != 0) return dateComp;
+        return b.id.compareTo(a.id);
+      });
 
     final int txIncome = transactions
         .where((t) => t.type == TransactionType.income)
@@ -34,97 +35,107 @@ class TransactionTab extends StatelessWidget {
 
     return Column(
       children: [
-        // ── 요약 배너 ──────────────────────────────────────────
+        // 1) 수입/지출 라벨 폰트 그림1과 동일하게, 2) padding 줄여서 높이 20% 축소
         Container(
-          color: const Color.fromARGB(255, 15, 43, 95),
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-          child: Row(
+          color: const Color(0xFF0F2B5F),
+          padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
+          child: Stack(
             children: [
-              Expanded(
-                child: AmountSummaryBlock(
-                  label: '수입',
-                  amount: txIncome,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: AmountSummaryBlock(
-                  label: '지출',
-                  amount: txExpense,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 12),
-              // ── + 버튼 ──────────────────────────────────────
-              GestureDetector(
-                onTap: onAddTap,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2A5A8A),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF5B8ABB).withOpacity(0.30),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+              // + 버튼 오른쪽 상단에 작게 배치
+              Positioned(
+                top: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: onAddTap,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A5A8A),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 18),
                   ),
-                  child: const Icon(Icons.add, size: 20, color: Colors.white),
                 ),
+              ),
+              // 수입/지출 전체 폭 사용
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '수입',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withOpacity(0.75),
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            fmtAmt(txIncome),
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '지출',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withOpacity(0.75),
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            fmtAmt(txExpense),
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // + 버튼 공간 확보 (Positioned가 겹치지 않게)
+                  const SizedBox(width: 40),
+                ],
               ),
             ],
           ),
         ),
-
-        // ── 리스트 ────────────────────────────────────────────
         Expanded(
           child: sorted.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.receipt_long_outlined,
-                        size: 44,
-                        color: Color(0xFFCCCCCC),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        '수입/지출 내역이 없습니다.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF888888),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      ElevatedButton.icon(
-                        onPressed: onAddTap,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5B8ABB),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: const Icon(
-                          Icons.add,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                        label: const Text(
-                          '항목 추가',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
+              ? const Center(child: Text('내역이 없습니다'))
               : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 100),
+                  padding: const EdgeInsets.fromLTRB(14, 6, 14, 100),
                   itemCount: sorted.length,
                   itemBuilder: (_, i) {
                     final tx = sorted[i];
@@ -156,144 +167,181 @@ class TransactionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIncome = tx.type == TransactionType.income;
+    final bool isRefund =
+        tx.memo.startsWith('회비반환_') || tx.title.startsWith('[반환]');
+    final bool isMemoHidden =
+        tx.memo.startsWith('회비_') || tx.memo.startsWith('회비반환_');
+
+    // 색상 정의
+    // 수입: 녹색 / 반환: 파랑 / 지출: 빨강
+    final Color iconBg = isIncome
+        ? const Color(0xFFE8F5EE) // 연녹색
+        : isRefund
+        ? const Color(0xFFE3EEFF) // 연파랑
+        : const Color(0xFFFFF0F0); // 연빨강 (지출 박스 배경 연하게)
+    final Color iconColor = isIncome
+        ? const Color(0xFF4A9E6B) // 녹색
+        : isRefund
+        ? const Color(0xFF3A7BD5) // 파랑
+        : const Color(0xFFCC4444); // 빨강
+    final Color amountColor = isIncome
+        ? const Color(0xFF2A7A4A) // 진녹색
+        : isRefund
+        ? const Color(0xFF2A5FCC) // 진파랑
+        : const Color(0xFFCC2222); // 진빨강
+    final Color cardBg = isIncome
+        ? Colors.white
+        : isRefund
+        ? Colors.white
+        : const Color(0xFFFFF8F8); // 지출 카드 배경 연분홍
+    final Color cardBorder = isIncome
+        ? const Color(0xFF9BB5D0)
+        : isRefund
+        ? const Color(0xFF9BB5D0)
+        : const Color(0xFFE8A0A0); // 지출 테두리 연빨강
 
     return Dismissible(
       key: Key(tx.id),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 16),
+        padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
           color: const Color(0xFFFFEEEE),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
         ),
-        child: const Icon(Icons.delete_outline, color: Color(0xFFB05B5B)),
+        child: const Icon(Icons.undo, color: Color(0xFFB05B5B), size: 22),
       ),
       confirmDismiss: (_) async {
-        // ★ 삭제 확인 다이얼로그
         final confirm = await showDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
+          builder: (_) => AlertDialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
             title: const Text(
-              '삭제할까요?',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              '회비 반납할까요?',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
-            content: Text(
-              '"${tx.title}" 항목을 삭제합니다.',
-              style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
-            ),
+            content: Text(tx.title, style: const TextStyle(fontSize: 16)),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text(
-                  '취소',
-                  style: TextStyle(color: Color(0xFF888888)),
-                ),
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('취소', style: TextStyle(fontSize: 14)),
               ),
               TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
+                onPressed: () => Navigator.pop(context, true),
                 child: const Text(
-                  '삭제',
-                  style: TextStyle(
-                    color: Color(0xFFB05B5B),
-                    fontWeight: FontWeight.w700,
-                  ),
+                  '반납',
+                  style: TextStyle(fontSize: 14, color: Colors.red),
                 ),
               ),
             ],
           ),
         );
         if (confirm == true) onDelete();
-        return false; // Dismissible 자체 삭제는 항상 막음
+        return false;
       },
       child: GestureDetector(
         onTap: onTap,
         child: Container(
+          // 4) 박스 높이 최대한 줄임
           margin: const EdgeInsets.only(bottom: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardBg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFD4D8DE), width: 1.1),
+            border: Border.all(color: cardBorder, width: 1.4),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x06000000),
+                blurRadius: 2,
+                offset: Offset(0, 1),
+              ),
+            ],
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 아이콘
               Container(
-                width: 34,
-                height: 34,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: isIncome
-                      ? const Color(0xFFE8F5EE)
-                      : const Color(0xFFFFEEEE),
+                  color: iconBg,
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: Icon(
-                  isIncome
-                      ? Icons.arrow_upward_rounded
-                      : Icons.arrow_downward_rounded,
-                  size: 16,
-                  color: isIncome
-                      ? const Color(0xFF4A9E6B)
-                      : const Color(0xFFB05B5B),
-                ),
+                child: tx.imagePath != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(9),
+                        child: Image.file(
+                          File(tx.imagePath!),
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Icon(
+                        isIncome
+                            ? Icons.arrow_upward
+                            : isRefund
+                            ? Icons.undo
+                            : Icons.arrow_downward,
+                        size: 18,
+                        color: iconColor,
+                      ),
               ),
               const SizedBox(width: 10),
-
-              // 제목 + 날짜 + 메모
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 제목 + 금액 한 줄
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          tx.title,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF111111),
+                        Flexible(
+                          child: Text(
+                            tx.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF111111),
+                              letterSpacing: -0.3,
+                            ),
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           '${isIncome ? '+' : '-'}${fmtAmt(tx.amount)}',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: isIncome
-                                ? const Color(0xFF2A7A4A)
-                                : const Color(0xFFB05B5B),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: amountColor,
+                            letterSpacing: -0.3,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 2),
-                    // 날짜
                     Text(
                       tx.date,
                       style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF444444),
+                        fontSize: 12,
+                        color: Color(0xFF666666),
+                        letterSpacing: -0.2,
                       ),
                     ),
-                    // 메모 — 전체 너비 사용, 잘림 없음
-                    if (tx.memo.isNotEmpty &&
-                        !tx.memo.startsWith('회비_') &&
-                        !tx.memo.startsWith('회비반환_'))
+                    // 5) 메모 표시 (회비_ 자동메모는 숨김, 직접 입력 메모만 표시)
+                    if (tx.memo.isNotEmpty && !isMemoHidden)
                       Padding(
                         padding: const EdgeInsets.only(top: 1),
                         child: Text(
                           tx.memo,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 10,
-                            color: Color(0xFF666666),
+                            fontSize: 12,
+                            color: Color(0xFF2A7A4A),
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: -0.1,
                           ),
                         ),
                       ),

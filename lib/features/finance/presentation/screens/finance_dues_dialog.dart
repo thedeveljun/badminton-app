@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'finance_models.dart';
 
-// ============================================================
-// finance_dues_dialog.dart — 회비납부 다이얼로그
-// ============================================================
-
 class DuesDialog extends StatefulWidget {
   final DuesRecord record;
   final int defaultDuesAmount;
@@ -12,10 +8,8 @@ class DuesDialog extends StatefulWidget {
   final int studentDiscountAmount;
   final int expectedAmount;
   final List<Transaction> transactions;
-  final void Function(
-    DuesRecord record,
-    List<Transaction> transactions,
-  ) onSave;
+  final void Function(DuesRecord record, List<Transaction> transactions)
+  onSave;
 
   const DuesDialog({
     super.key,
@@ -46,12 +40,14 @@ class _DuesDialogState extends State<DuesDialog> {
     _amountCtrl = TextEditingController(
       text: r.amount > 0
           ? r.amount.toString().replaceAllMapped(
-              RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+            (m) => '${m[1]},',
+      )
           : '',
     );
-    _memoCtrl    = TextEditingController(text: r.memo);
-    _paidDate    = r.paidDate.isEmpty ? todayStr() : r.paidDate;
-    _isPaid      = r.isPaid;
+    _memoCtrl = TextEditingController(text: r.memo);
+    _paidDate = r.paidDate.isEmpty ? todayStr() : r.paidDate;
+    _isPaid = r.isPaid;
     _discountType = r.discountType;
   }
 
@@ -64,10 +60,14 @@ class _DuesDialogState extends State<DuesDialog> {
 
   int get _dialogExpectedAmount {
     switch (_discountType) {
-      case 'age':     return widget.ageDiscountAmount;
-      case 'student': return widget.studentDiscountAmount;
-      case 'free':    return 0;
-      default:        return widget.defaultDuesAmount;
+      case 'age':
+        return widget.ageDiscountAmount;
+      case 'student':
+        return widget.studentDiscountAmount;
+      case 'free':
+        return 0;
+      default:
+        return widget.defaultDuesAmount;
     }
   }
 
@@ -76,27 +76,35 @@ class _DuesDialogState extends State<DuesDialog> {
     _amountCtrl.text = amt == 0
         ? '0'
         : amt.toString().replaceAllMapped(
-            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
+    );
     setState(() {});
   }
 
   DateTime _parseDate(String s) {
-    try { return DateTime.parse(s); } catch (_) { return DateTime.now(); }
+    try {
+      return DateTime.parse(s);
+    } catch (_) {
+      return DateTime.now();
+    }
   }
 
   void _save() {
     final prevPaid = widget.record.isPaid;
-    final record   = widget.record;
-    final txList   = List<Transaction>.from(widget.transactions);
+    final record = widget.record;
+    final txList = List<Transaction>.from(widget.transactions);
 
-    record.isPaid       = _isPaid;
+    record.isPaid = _isPaid;
     record.discountType = _discountType;
-    record.hasDiscount  = _discountType != 'none';
-    record.amount = int.tryParse(
-      _amountCtrl.text.replaceAll(',', '').replaceAll('원', '').trim()) ?? 0;
+    record.hasDiscount = _discountType != 'none';
+    record.amount =
+        int.tryParse(
+          _amountCtrl.text.replaceAll(',', '').replaceAll('원', '').trim(),
+        ) ??
+            0;
     record.memo = _memoCtrl.text.trim();
 
-    // 납부일 처리
     if (_isPaid) {
       record.paidDate = _paidDate;
     } else {
@@ -109,43 +117,48 @@ class _DuesDialogState extends State<DuesDialog> {
       record.amount = _dialogExpectedAmount;
     }
 
-    // ★ 납부 처리 → 수입 항목 자동 추가
     if (_isPaid && !prevPaid && record.amount > 0) {
       txList.removeWhere((t) => t.memo == '회비_${record.memberId}');
-      txList.add(Transaction(
-        type: TransactionType.income,
-        title: '${record.memberName} 회비',
-        amount: record.amount,
-        date: _paidDate,
-        memo: '회비_${record.memberId}',
-      ));
+      txList.add(
+        Transaction(
+          type: TransactionType.income,
+          title: '${record.memberName} 회비',
+          amount: record.amount,
+          date: _paidDate,
+          memo: '회비_${record.memberId}',
+        ),
+      );
     }
 
-    // ★ 미납으로 변경 → [반환] 기록 추가 + 수입 항목 삭제
     if (!_isPaid && prevPaid) {
       final existing = txList.firstWhere(
-        (t) => t.memo == '회비_${record.memberId}',
+            (t) => t.memo == '회비_${record.memberId}',
         orElse: () => Transaction(
-          type: TransactionType.income, title: '',
+          type: TransactionType.income,
+          title: '',
           amount: record.amount > 0 ? record.amount : _dialogExpectedAmount,
           date: todayStr(),
         ),
       );
-      final returnAmount = existing.amount > 0 ? existing.amount
+      final returnAmount = existing.amount > 0
+          ? existing.amount
           : (record.amount > 0 ? record.amount : _dialogExpectedAmount);
 
       txList.removeWhere((t) => t.memo == '회비_${record.memberId}');
 
-      final alreadyCancelled =
-          txList.any((t) => t.memo == '회비반환_${record.memberId}');
+      final alreadyCancelled = txList.any(
+            (t) => t.memo == '회비반환_${record.memberId}',
+      );
       if (!alreadyCancelled) {
-        txList.add(Transaction(
-          type: TransactionType.expense,
-          title: '[반환] ${record.memberName} 회비',
-          amount: returnAmount,
-          date: todayStr(),
-          memo: '회비반환_${record.memberId}',
-        ));
+        txList.add(
+          Transaction(
+            type: TransactionType.expense,
+            title: '[반환] ${record.memberName} 회비',
+            amount: returnAmount,
+            date: todayStr(),
+            memo: '회비반환_${record.memberId}',
+          ),
+        );
       }
     }
 
@@ -157,66 +170,82 @@ class _DuesDialogState extends State<DuesDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: const Color(0xFFF4F5FA),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 이름 + 나이
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(widget.record.memberName,
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.w800,
-                        color: Color(0xFF111111))),
+                Text(
+                  widget.record.memberName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF111111),
+                  ),
+                ),
                 if (widget.record.memberBirth.isNotEmpty) ...[
                   const SizedBox(width: 6),
-                  Text('${calcAge(widget.record.memberBirth)}세',
-                      style: const TextStyle(
-                          fontSize: 14, color: Color(0xFF888888))),
+                  Text(
+                    '${calcAge(widget.record.memberBirth)}세',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF888888),
+                    ),
+                  ),
                 ],
               ],
             ),
             const SizedBox(height: 14),
 
-            // 납부 여부 토글
             Row(
               children: [
-                const Text('납부 여부',
-                    style: TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600,
-                        color: Color(0xFF444444))),
+                const Text(
+                  '납부 여부',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF444444),
+                  ),
+                ),
                 const Spacer(),
                 GestureDetector(
                   onTap: () => setState(() => _isPaid = !_isPaid),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
-                    width: 76, height: 32,
+                    width: 76,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: _isPaid
-                          ? const Color(0xFF4A9E6B) : const Color(0xFFB05B5B),
+                          ? const Color(0xFF4A9E6B)
+                          : const Color(0xFFB05B5B),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     alignment: Alignment.center,
-                    child: Text(_isPaid ? '납부 ✓' : '미납',
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w700,
-                            color: Colors.white)),
+                    child: Text(
+                      _isPaid ? '납부 ✓' : '미납',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
 
-            // 할인 구분
             DlgField(
               label: '할인 구분',
               child: Wrap(
-                spacing: 6, runSpacing: 6,
+                spacing: 6,
+                runSpacing: 6,
                 children: [
                   _chip('일반', 'none'),
                   _chip('연령', 'age'),
@@ -227,16 +256,15 @@ class _DuesDialogState extends State<DuesDialog> {
             ),
             const SizedBox(height: 8),
 
-            // 납부금액
             DlgField(
               label: '납부금액',
               child: AmountTextField(
-                  controller: _amountCtrl,
-                  hint: fmtAmt(_dialogExpectedAmount)),
+                controller: _amountCtrl,
+                hint: fmtAmt(_dialogExpectedAmount),
+              ),
             ),
             const SizedBox(height: 8),
 
-            // 납부일
             DlgField(
               label: '납부일',
               child: GestureDetector(
@@ -248,8 +276,10 @@ class _DuesDialogState extends State<DuesDialog> {
                     lastDate: DateTime(2030),
                   );
                   if (picked != null) {
-                    setState(() => _paidDate =
-                        '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}');
+                    setState(
+                          () => _paidDate =
+                      '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}',
+                    );
                   }
                 },
                 child: Container(
@@ -262,13 +292,20 @@ class _DuesDialogState extends State<DuesDialog> {
                   ),
                   child: Row(
                     children: [
-                      Text(_paidDate.isEmpty ? '날짜 선택' : _paidDate,
-                          style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w500,
-                              color: Color(0xFF111111))),
+                      Text(
+                        _paidDate.isEmpty ? '날짜 선택' : _paidDate,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF111111),
+                        ),
+                      ),
                       const Spacer(),
-                      const Icon(Icons.calendar_today_outlined,
-                          size: 15, color: Color(0xFF888888)),
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 15,
+                        color: Color(0xFF888888),
+                      ),
                     ],
                   ),
                 ),
@@ -276,7 +313,6 @@ class _DuesDialogState extends State<DuesDialog> {
             ),
             const SizedBox(height: 8),
 
-            // 메모
             DlgField(
               label: '메모',
               child: TextField(
@@ -287,7 +323,6 @@ class _DuesDialogState extends State<DuesDialog> {
             ),
             const SizedBox(height: 14),
 
-            // 버튼
             Row(
               children: [
                 Expanded(
@@ -296,11 +331,14 @@ class _DuesDialogState extends State<DuesDialog> {
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFFB6BCC8)),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    child: const Text('취소',
-                        style: TextStyle(color: Color(0xFF555555))),
+                    child: const Text(
+                      '취소',
+                      style: TextStyle(color: Color(0xFF555555)),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -311,13 +349,18 @@ class _DuesDialogState extends State<DuesDialog> {
                       elevation: 0,
                       backgroundColor: const Color(0xFF5B8ABB),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    child: const Text('저장',
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w700,
-                            color: Colors.white)),
+                    child: const Text(
+                      '저장',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -342,13 +385,19 @@ class _DuesDialogState extends State<DuesDialog> {
           color: selected ? const Color(0xFF5B8ABB) : const Color(0xFFF0F4FA),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: selected ? const Color(0xFF5B8ABB) : const Color(0xFFCDD5DF)),
+            color: selected
+                ? const Color(0xFF5B8ABB)
+                : const Color(0xFFCDD5DF),
+          ),
         ),
-        child: Text(label,
-            style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w700,
-              color: selected ? Colors.white : const Color(0xFF555555),
-            )),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: selected ? Colors.white : const Color(0xFF555555),
+          ),
+        ),
       ),
     );
   }

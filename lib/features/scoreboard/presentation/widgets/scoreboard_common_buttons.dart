@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// 하단 버튼 — width를 고정하지 않고 부모(Expanded/Row)가 크기를 결정합니다.
 class BottomTextButton extends StatelessWidget {
   final String text;
   final Color backgroundColor;
@@ -21,34 +20,31 @@ class BottomTextButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 64,
-      child: Material(
-        color: backgroundColor,
+    return Material(
+      color: backgroundColor,
+      borderRadius: BorderRadius.circular(12),
+      elevation: 3,
+      child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        elevation: 3,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          onLongPress: onLongPress,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: borderColor, width: 1.2),
-            ),
-            child: Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: Text(
-                    text,
-                    maxLines: 1,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor, width: 1.2),
+          ),
+          child: Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Text(
+                  text,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),

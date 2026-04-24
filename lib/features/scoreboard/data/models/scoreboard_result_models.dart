@@ -1,5 +1,6 @@
-import 'package:funminton_club_app/features/scoreboard/data/models/scoreboard_saved_match_record.dart';
+import 'scoreboard_saved_match_record.dart';
 
+/// 서브 설정 결과
 class ScoreboardServeSetupResult {
   final int firstServerGlobalIndex;
   final int opponentFirstServerGlobalIndex;
@@ -10,6 +11,7 @@ class ScoreboardServeSetupResult {
   });
 }
 
+/// 선수명 일괄 수정 결과
 class ScoreboardBulkPlayerEditResult {
   final String leftPlayer1;
   final String leftPlayer2;
@@ -24,6 +26,7 @@ class ScoreboardBulkPlayerEditResult {
   });
 }
 
+/// 저장 기록 페이지 결과
 class ScoreboardSavedMatchesPageResult {
   final List<ScoreboardSavedMatchRecord> savedMatches;
   final bool changed;
